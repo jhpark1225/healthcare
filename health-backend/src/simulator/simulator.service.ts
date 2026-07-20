@@ -80,6 +80,14 @@ export class SimulatorService implements OnModuleInit {
       });
     });
 
+    // 어떤 이벤트명으로 오는지 확인용 — 추후 제거
+    socket.onAny((eventName: string, ...args: any[]) => {
+      this.logger.info(
+        `[RAW] ${member.member_id} | event="${eventName}" | ${JSON.stringify(args).slice(0, 200)}`,
+        { context: 'SimulatorService' },
+      );
+    });
+
     socket.on('heartRate', async (data: any) => {
       this.logIfToday(member.member_id, 'heartRate', data);
       await this.handleHeartRate(member, data);
