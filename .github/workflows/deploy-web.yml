@@ -43,12 +43,11 @@ jobs:
       #    - 빌드 컨텍스트: 리포 루트 (shared/ 포함)
       #    - VITE_API_BASE_URL: 빌드 시점에 번들에 삽입 (런타임 주입 불가)
       - name: Docker 이미지 빌드
-        env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
         run: |
           docker build \
             -f health-web/Dockerfile \
-            --build-arg VITE_API_BASE_URL=$VITE_API_BASE_URL \
+            --build-arg VITE_API_URL=${{ vars.WEB_API_URL || 'https://be015.ys.iranglab.com' }} \
+            --build-arg VITE_WS_URL=${{ vars.WEB_WS_URL || 'wss://be015.ys.iranglab.com' }} \
             -t "$IMAGE_NAME" \
             .
 
