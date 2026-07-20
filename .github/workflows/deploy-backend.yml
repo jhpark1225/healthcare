@@ -133,6 +133,15 @@ jobs:
 
           echo '=== 컨테이너 로그 (최근 30줄) ==='
           docker logs --tail 30 ${CONTAINER_NAME} 2>&1 || echo '[컨테이너가 이미 종료됨]'
+
+          echo '=== 포트 리슨 확인 ==='
+          docker exec ${CONTAINER_NAME} sh -c \
+            "ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null || echo 'port check unavailable'" \
+            || echo '[exec 실패 - 컨테이너 없음]'
+
+          echo '=== localhost:${APP_PORT} 응답 테스트 ==='
+          curl -s -o /dev/null -w "HTTP status: %{http_code}\n" \
+            http://localhost:${APP_PORT} 2>&1 || echo '[curl 실패]'
           SCRIPT
 
           chmod +x /tmp/deploy_${APP_PORT}.sh
