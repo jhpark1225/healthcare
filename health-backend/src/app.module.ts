@@ -13,6 +13,10 @@ import { SimulatorModule } from './simulator/simulator.module';
 import { AlertModule } from './alert/alert.module';
 import { ChatModule } from './chat/chat.module';
 import { WebhookModule } from './webhook/webhook.module';
+import { DatabaseSeederService } from './database/database-seeder.service';
+import { Member } from './members/entities/member.entity';
+import { DiseaseCode } from './members/entities/disease-code.entity';
+import { MemberDisease } from './members/entities/member-disease.entity';
 
 @Module({
   imports: [
@@ -69,6 +73,8 @@ import { WebhookModule } from './webhook/webhook.module';
 
     ScheduleModule.forRoot(),
 
+    TypeOrmModule.forFeature([Member, DiseaseCode, MemberDisease]),
+
     AuthModule,
     MembersModule,
     HealthModule,
@@ -77,5 +83,6 @@ import { WebhookModule } from './webhook/webhook.module';
     ChatModule,
     WebhookModule,
   ],
+  providers: [DatabaseSeederService],
 })
 export class AppModule {}
