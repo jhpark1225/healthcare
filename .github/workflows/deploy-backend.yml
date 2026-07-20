@@ -47,14 +47,14 @@ jobs:
       - name: 배포 디렉토리 생성
         run: |
           ssh -p ${{ vars.SERVER_PORT }} \
-            ${{ secrets.SERVER_USER }}@${{ vars.SERVER_HOST }} \
+            ${{ vars.SERVER_HOST }} \
             "mkdir -p $DEPLOY_DIR"
 
       # 6. 이미지 파일 전송 (SCP)
       - name: 이미지 전송
         run: |
           scp -P ${{ vars.SERVER_PORT }} backend.tar.gz \
-            ${{ secrets.SERVER_USER }}@${{ vars.SERVER_HOST }}:$DEPLOY_DIR/backend.tar.gz
+            ${{ vars.SERVER_HOST }}:$DEPLOY_DIR/backend.tar.gz
 
       # 7. 배포 스크립트 생성 → 서버 전송 → 실행
       #
@@ -130,11 +130,11 @@ jobs:
 
           # ── 스크립트 서버 전송 ──
           scp -P ${{ vars.SERVER_PORT }} /tmp/deploy_${APP_PORT}.sh \
-            ${{ secrets.SERVER_USER }}@${{ vars.SERVER_HOST }}:/tmp/deploy_${APP_PORT}.sh
+            ${{ vars.SERVER_HOST }}:/tmp/deploy_${APP_PORT}.sh
 
           # ── 서버에서 실행 후 스크립트 삭제 ──
           ssh -p ${{ vars.SERVER_PORT }} \
-            ${{ secrets.SERVER_USER }}@${{ vars.SERVER_HOST }} \
+            ${{ vars.SERVER_HOST }} \
             "chmod +x /tmp/deploy_${APP_PORT}.sh \
              && /tmp/deploy_${APP_PORT}.sh \
              && rm -f /tmp/deploy_${APP_PORT}.sh"
