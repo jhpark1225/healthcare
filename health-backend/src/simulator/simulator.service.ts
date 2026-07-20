@@ -88,27 +88,32 @@ export class SimulatorService implements OnModuleInit {
       );
     });
 
-    socket.on('heartRate', async (data: any) => {
+    socket.on('heartRate', async (raw: any) => {
+      const data = raw?.data ?? raw;
       this.logIfToday(member.member_id, 'heartRate', data);
       await this.handleHeartRate(member, data);
     });
 
-    socket.on('bloodPressure', async (data: any) => {
+    socket.on('bloodPressure', async (raw: any) => {
+      const data = raw?.data ?? raw;
       this.logIfToday(member.member_id, 'bloodPressure', data);
       await this.handleBloodPressure(member, data);
     });
 
-    socket.on('weight', async (data: any) => {
+    socket.on('weight', async (raw: any) => {
+      const data = raw?.data ?? raw;
       this.logIfToday(member.member_id, 'weight', data);
       await this.handleWeight(member, data);
     });
 
-    socket.on('glucose', async (data: any) => {
+    socket.on('glucose', async (raw: any) => {
+      const data = raw?.data ?? raw;
       this.logIfToday(member.member_id, 'glucose', data);
       await this.handleGlucose(member, data);
     });
 
-    socket.on('stepCount', async (data: any) => {
+    socket.on('stepCount', async (raw: any) => {
+      const data = raw?.data ?? raw;
       this.logIfToday(member.member_id, 'stepCount', data);
       await this.handleStepCount(member, data);
     });
