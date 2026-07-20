@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DEPLOY_DIR: /app/healthcare-${{ vars.BACKEND_PORT }}/web
+      DEPLOY_DIR: ~/healthcare-${{ vars.BACKEND_PORT }}/web
 
     steps:
       # 1. 소스 체크아웃 (shared/ 포함)

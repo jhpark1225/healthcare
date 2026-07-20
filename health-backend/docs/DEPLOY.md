@@ -12,8 +12,8 @@ NestJS 백엔드를 Docker 컨테이너로 빌드하고 GitHub Actions로 자동
 |---|---|---|
 | Docker 이미지명 | `healthcare-backend-{BACKEND_PORT}` | `healthcare-backend-3015` |
 | 컨테이너명 | `healthcare-backend-{BACKEND_PORT}` | `healthcare-backend-3015` |
-| 배포 디렉토리 | `/app/healthcare-{BACKEND_PORT}/backend` | `/app/healthcare-3015/backend` |
-| 로그 디렉토리 | `/app/healthcare-{BACKEND_PORT}/logs` | `/app/healthcare-3015/logs` |
+| 배포 디렉토리 | `~/healthcare-{BACKEND_PORT}/backend` | `~/healthcare-3015/backend` |
+| 로그 디렉토리 | `~/healthcare-{BACKEND_PORT}/logs` | `~/healthcare-3015/logs` |
 | 호스트 포트 | `{BACKEND_PORT}:{BACKEND_PORT}` | `3015:3015` |
 
 ---
@@ -183,5 +183,5 @@ docker logs -f healthcare-backend-{PORT}
 docker restart healthcare-backend-{PORT}
 
 # 로그 파일 확인
-ls -la /app/healthcare-{PORT}/logs/
+ls -la ~/healthcare-{PORT}/logs/
 ```

@@ -15,7 +15,6 @@ jobs:
     env:
       IMAGE_NAME:     healthcare-backend-${{ vars.BACKEND_PORT }}
       CONTAINER_NAME: healthcare-backend-${{ vars.BACKEND_PORT }}
-      DEPLOY_DIR:     /app/healthcare-${{ vars.BACKEND_PORT }}/backend
       SSH_TARGET:     ${{ secrets.SERVER_USER }}@${{ vars.SERVER_HOST }}
 
     steps:
@@ -23,18 +22,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.2.2
 
-      # 2. SSH 에이전트 설정 (키 형식·CRLF 처리를 Action이 담당)
+      # 2. SSH 에이전트 설정
       - name: SSH 에이전트 설정
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      # 3. known_hosts 등록 (실패해도 계속 진행 — StrictHostKeyChecking=no 로 보완)
-      - name: known_hosts 등록
+      # 3. known_hosts 등록 및 호스트키 검증 우회
+      - name: SSH 설정
         run: |
           ssh-keyscan -p ${{ vars.SERVER_PORT }} ${{ vars.SERVER_HOST }} \
             >> ~/.ssh/known_hosts 2>/dev/null || true
-          # SSH 전역 옵션: 호스트키 검증 우회, 키 자동 수락
           cat >> ~/.ssh/config << 'EOF'
           Host *
             StrictHostKeyChecking no
@@ -50,23 +48,23 @@ jobs:
       - name: 이미지 압축
         run: docker save "$IMAGE_NAME" | gzip > backend.tar.gz
 
-      # 6. 배포 디렉토리 생성
+      # 6. 배포 디렉토리 생성 (홈 디렉토리 기준)
       - name: 배포 디렉토리 생성
         run: |
           ssh -p ${{ vars.SERVER_PORT }} $SSH_TARGET \
-            "mkdir -p $DEPLOY_DIR"
+            "mkdir -p ~/healthcare-${{ vars.BACKEND_PORT }}/backend"
 
       # 7. 이미지 전송
       - name: 이미지 전송
         run: |
           scp -P ${{ vars.SERVER_PORT }} backend.tar.gz \
-            $SSH_TARGET:$DEPLOY_DIR/backend.tar.gz
+            $SSH_TARGET:~/healthcare-${{ vars.BACKEND_PORT }}/backend/backend.tar.gz
 
       # 8. 배포 스크립트 생성 → 서버 전송 → 실행
       #
-      # heredoc 미인용(SCRIPT) → 러너 환경변수가 스크립트에 직접 치환됨
-      # JWT_ACCESS_TTL_SEC / JWT_REFRESH_TTL_SEC: 숫자에 's' 접미사 추가
-      #   (ms 라이브러리 포맷: 86400 → "86400s")
+      # * heredoc 미인용(SCRIPT) → 러너 환경변수($VAR) 직접 치환
+      # * \$HOME → 생성된 스크립트에서 서버의 $HOME으로 치환
+      # * JWT_ACCESS_TTL_SEC → 's' 접미사 추가 (86400 → "86400s")
       - name: 배포 스크립트 생성 및 실행
         env:
           APP_PORT:                     ${{ vars.BACKEND_PORT }}
@@ -89,19 +87,19 @@ jobs:
           set -e
 
           echo '>>> [1/4] Docker 이미지 로드'
-          docker load < ${DEPLOY_DIR}/backend.tar.gz
+          docker load < \$HOME/healthcare-${APP_PORT}/backend/backend.tar.gz
 
           echo '>>> [2/4] 기존 컨테이너 중지 및 제거'
           docker stop ${CONTAINER_NAME} 2>/dev/null || true
           docker rm   ${CONTAINER_NAME} 2>/dev/null || true
 
           echo '>>> [3/4] 컨테이너 기동'
-          mkdir -p /app/healthcare-${APP_PORT}/logs
+          mkdir -p \$HOME/healthcare-${APP_PORT}/logs
           docker run -d \
             --name ${CONTAINER_NAME} \
             --restart unless-stopped \
             -p ${APP_PORT}:${APP_PORT} \
-            -v /app/healthcare-${APP_PORT}/logs:/app/logs \
+            -v \$HOME/healthcare-${APP_PORT}/logs:/app/logs \
             -e PORT=${APP_PORT} \
             -e NODE_ENV=production \
             -e DB_HOST=${DB_HOST} \
