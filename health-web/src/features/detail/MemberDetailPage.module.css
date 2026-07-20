@@ -1,0 +1,237 @@
+/* Page layout with sidebar */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--color-canvas-parchment);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Alert banner ──────────────────────────────────────────────────── */
+.alertBanner {
+  background-color: rgba(255, 59, 48, 0.08);
+  border-bottom: 1px solid rgba(255, 59, 48, 0.2);
+  padding: var(--spacing-sm) var(--spacing-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.alertIcon { font-size: 16px; flex-shrink: 0; }
+
+.alertMsg {
+  flex: 1;
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 600;
+  color: #ff3b30;
+  letter-spacing: -0.224px;
+}
+
+.alertClose {
+  background: none;
+  border: none;
+  color: #ff3b30;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── Profile banner ────────────────────────────────────────────────── */
+.profile {
+  background-color: var(--color-canvas);
+  border-bottom: 1px solid var(--color-hairline);
+  padding: var(--spacing-xl);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-lg);
+}
+
+.profileAvatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--rounded-full);
+  background-color: var(--color-canvas-parchment);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-text);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-ink-muted-80);
+  flex-shrink: 0;
+}
+
+.profileInfo { flex: 1; min-width: 0; }
+
+.profileNameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.profileName {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -0.374px;
+  color: var(--color-ink);
+}
+
+/* Connection status */
+.connDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.connDotOn { background-color: #34c759; }
+.connDotOff { background-color: var(--color-ink-muted-48); }
+
+.connLabel {
+  font-family: var(--font-text);
+  font-size: 12px;
+  letter-spacing: -0.12px;
+}
+.connLabelOn { color: #34c759; }
+.connLabelOff { color: var(--color-ink-muted-48); }
+
+.profileMeta {
+  font-family: var(--font-text);
+  font-size: 17px;
+  letter-spacing: -0.374px;
+  color: var(--color-ink-muted-48);
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Disease tags */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.tag {
+  padding: 4px 12px;
+  background-color: var(--color-canvas-parchment);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-pill);
+  font-family: var(--font-text);
+  font-size: 12px;
+  letter-spacing: -0.12px;
+  color: var(--color-ink-muted-80);
+}
+
+/* ── Chart grid ────────────────────────────────────────────────────── */
+.chartGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl);
+}
+
+/* Heart rate spans full width */
+.chartGrid > :first-child {
+  grid-column: 1 / -1;
+}
+
+/* ── Chart card ────────────────────────────────────────────────────── */
+.chartCard {
+  background-color: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-lg);
+  padding: var(--spacing-lg);
+  overflow: hidden;
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-sm);
+}
+
+.chartTitleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.chartTitle {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.19;
+  letter-spacing: 0.231px;
+  color: var(--color-ink);
+}
+
+.chartUnit {
+  font-family: var(--font-text);
+  font-size: 12px;
+  color: var(--color-ink-muted-48);
+  align-self: flex-end;
+  margin-bottom: 2px;
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: var(--rounded-pill);
+  font-family: var(--font-text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badgeDanger { background-color: rgba(255, 59, 48, 0.1); color: #ff3b30; }
+.badgeWarning { background-color: rgba(255, 149, 0, 0.1); color: #ff9500; }
+
+.chartLatest { text-align: right; }
+
+.chartLatestValue {
+  display: block;
+  font-family: var(--font-text);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.374px;
+  color: var(--color-ink);
+}
+
+.chartLatestTime {
+  font-family: var(--font-text);
+  font-size: 11px;
+  color: var(--color-ink-muted-48);
+}
+
+.hint {
+  font-family: var(--font-text);
+  font-size: 17px;
+  color: var(--color-ink-muted-48);
+  padding: var(--spacing-section) var(--spacing-xl);
+}
+
+/* ── Mobile breakpoint ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .layout { flex-direction: column; }
+
+  .profile { padding: var(--spacing-lg); }
+
+  .profileName { font-size: 21px; }
+
+  .chartGrid {
+    grid-template-columns: 1fr;
+    padding: var(--spacing-lg);
+  }
+
+  /* Remove full-width override on mobile */
+  .chartGrid > :first-child { grid-column: auto; }
+}

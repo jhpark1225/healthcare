@@ -1,0 +1,184 @@
+/* Desktop sidebar (240px, dark) */
+.sidebar {
+  width: 240px;
+  background-color: var(--color-surface-tile-1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: var(--spacing-xl) 0;
+}
+
+.top { display: flex; flex-direction: column; gap: var(--spacing-xl); }
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 0 var(--spacing-lg);
+}
+
+.logoMark {
+  font-size: 20px;
+  color: var(--color-primary-on-dark);
+}
+
+.logoText {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.374px;
+  color: var(--color-on-dark);
+}
+
+/* Nav */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 var(--spacing-sm);
+}
+
+.navItem {
+  display: block;
+  padding: 10px var(--spacing-sm);
+  border-radius: var(--rounded-sm);
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.224px;
+  color: var(--color-body-muted);
+  text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.navItem:hover { background-color: rgba(255, 255, 255, 0.08); color: var(--color-on-dark); }
+
+.navItemActive {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: var(--color-on-dark);
+  font-weight: 600;
+}
+
+/* Current patient */
+.patientBox {
+  margin: 0 var(--spacing-lg);
+  padding: var(--spacing-sm);
+  background-color: rgba(255, 255, 255, 0.06);
+  border-radius: var(--rounded-md);
+  border-left: 2px solid var(--color-primary-on-dark);
+}
+
+.patientLabel {
+  font-family: var(--font-text);
+  font-size: 11px;
+  letter-spacing: -0.12px;
+  color: var(--color-body-muted);
+  margin-bottom: 2px;
+}
+
+.patientName {
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-on-dark);
+  word-break: break-all;
+}
+
+/* Bottom user info */
+.bottom {
+  padding: var(--spacing-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.userInfo { display: flex; flex-direction: column; gap: 2px; }
+
+.userName {
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-on-dark);
+}
+
+.userRole {
+  font-family: var(--font-text);
+  font-size: 12px;
+  color: var(--color-body-muted);
+}
+
+.logoutBtn {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-on-dark);
+  border: none;
+  border-radius: var(--rounded-sm);
+  padding: 8px;
+  font-family: var(--font-text);
+  font-size: 14px;
+  letter-spacing: -0.224px;
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.1s;
+  text-align: center;
+}
+
+.logoutBtn:hover { background-color: rgba(255, 255, 255, 0.16); }
+.logoutBtn:active { transform: scale(0.95); }
+
+/* ─── Mobile (≤ 768px): horizontal tab bar ─────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: 44px;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 var(--spacing-lg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    overflow: visible;
+    justify-content: space-between;
+  }
+
+  .top {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-lg);
+    flex: 1;
+  }
+
+  .logo { padding: 0; }
+  .logoMark { display: none; }
+
+  .nav {
+    flex-direction: row;
+    gap: var(--spacing-xs);
+    padding: 0;
+  }
+
+  .navItem {
+    padding: 6px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .patientBox { display: none; }
+
+  .bottom {
+    padding: 0;
+    border-top: none;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+
+  .userInfo { display: none; }
+
+  .logoutBtn { padding: 6px 12px; font-size: 12px; }
+}

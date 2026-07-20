@@ -1,0 +1,78 @@
+name: Deploy Web
+
+# ────────────────────────────────────────────────────────────────
+# health-web/ 또는 shared/ 변경 시 main 브랜치에 push하면 실행
+# 빌드 후 정적 파일을 서버에 배포하고 nginx를 재로드한다
+# ────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'health-web/**'
+      - 'shared/**'
+      - '.github/workflows/deploy-web.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      DEPLOY_DIR: /app/healthcare-${{ vars.BACKEND_PORT }}/web
+
+    steps:
+      # 1. 소스 체크아웃 (shared/ 포함)
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Node.js 설정
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: health-web/package-lock.json
+
+      # 3. 의존성 설치
+      - name: 의존성 설치
+        working-directory: health-web
+        run: npm ci
+
+      # 4. 프로덕션 빌드
+      #    VITE_API_URL / VITE_WS_URL 은 GitHub Variables 에서 주입
+      - name: 프로덕션 빌드
+        working-directory: health-web
+        env:
+          VITE_API_URL: ${{ vars.WEB_API_URL }}
+          VITE_WS_URL:  ${{ vars.WEB_WS_URL }}
+        run: npm run build
+
+      # 5. SSH 접속 준비
+      - name: SSH 설정
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p ${{ vars.SERVER_PORT }} ${{ vars.SERVER_HOST }} \
+            >> ~/.ssh/known_hosts 2>/dev/null
+
+      # 6. 서버에 배포 디렉토리 생성
+      - name: 배포 디렉토리 생성
+        run: |
+          ssh -p ${{ vars.SERVER_PORT }} \
+            ${{ secrets.SERVER_USER }}@${{ vars.SERVER_HOST }} \
+            "mkdir -p $DEPLOY_DIR"
+
+      # 7. 빌드 결과물 전송 (rsync: 변경 파일만 전송, 삭제된 파일 제거)
+      - name: 정적 파일 전송
+        run: |
+          rsync -avz --delete \
+            -e "ssh -p ${{ vars.SERVER_PORT }} -i ~/.ssh/id_rsa" \
+            health-web/dist/ \
+            ${{ secrets.SERVER_USER }}@${{ vars.SERVER_HOST }}:$DEPLOY_DIR/
+
+      # 8. nginx 재로드 (새 파일 즉시 서빙)
+      - name: nginx 재로드
+        run: |
+          ssh -p ${{ vars.SERVER_PORT }} \
+            ${{ secrets.SERVER_USER }}@${{ vars.SERVER_HOST }} \
+            "sudo nginx -s reload 2>/dev/null || sudo systemctl reload nginx"

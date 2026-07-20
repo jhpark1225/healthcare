@@ -14,7 +14,10 @@ import { Inject } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 
-@WebSocketGateway({ namespace: '/health-ws', cors: { origin: '*' } })
+@WebSocketGateway({
+  namespace: '/health-ws',
+  cors: { origin: ['http://localhost:5173', 'https://fe015.ys.iranglab.com'], credentials: true },
+})
 export class HealthGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
