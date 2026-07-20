@@ -63,7 +63,7 @@ export function useHealthSocket(memberId: string) {
     const token = Cookies.get('access_token') ?? ''
     const socket = io(`${import.meta.env.VITE_WS_URL as string}/health-ws`, {
       auth: { token },
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
     })
 
     socket.on('connect', () => {

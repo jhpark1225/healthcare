@@ -24,6 +24,22 @@ import { HealthService } from './health.service';
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
+  @Get(':memberId/health/latest')
+  @ApiOperation({
+    summary: '최신 건강데이터 통합 조회',
+    description: '모든 건강지표(심박수·혈압·혈당·체중·걸음수)의 최근 N건을 한 번에 반환합니다.',
+  })
+  @ApiParam({ name: 'memberId', description: '회원 ID' })
+  @ApiQuery({ name: 'limit', required: false, description: '각 지표별 최근 N건 (기본 20)', example: '20' })
+  @ApiResponse({ status: 200, description: '최신 건강데이터 통합 반환' })
+  findLatest(
+    @Request() req: any,
+    @Param('memberId') memberId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.healthService.findLatest(req.user, memberId, limit ? parseInt(limit, 10) : 20);
+  }
+
   @Get(':memberId/health/heart-rates')
   @ApiOperation({
     summary: '심박수 조회',

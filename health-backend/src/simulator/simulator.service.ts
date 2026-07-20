@@ -166,10 +166,10 @@ export class SimulatorService implements OnModuleInit {
       // WebSocket push
       this.healthGateway.pushToClients(member.member_id, 'heartRate', {
         memberId: member.member_id,
-        heartRate,
+        heart_rate: heartRate,
+        status: source,
         source,
-        note,
-        measuredAt: measuredAt.toISOString(),
+        measured_at: measuredAt.toISOString(),
       });
 
       // 이상 감지
@@ -180,10 +180,10 @@ export class SimulatorService implements OnModuleInit {
 
         this.healthGateway.pushToClients(member.member_id, 'alert', {
           memberId: member.member_id,
-          memberName: member.name,
           type: 'heartRate',
-          value: { heartRate, source },
-          measuredAt: measuredAt.toISOString(),
+          value: heartRate,
+          message: `심박수 이상: ${heartRate} bpm`,
+          measured_at: measuredAt.toISOString(),
         });
       }
     } catch (err) {
@@ -214,7 +214,8 @@ export class SimulatorService implements OnModuleInit {
         memberId: member.member_id,
         systolic,
         diastolic,
-        measuredAt: measuredAt.toISOString(),
+        status: source || null,
+        measured_at: measuredAt.toISOString(),
       });
 
       // 이상 감지
@@ -225,10 +226,10 @@ export class SimulatorService implements OnModuleInit {
 
         this.healthGateway.pushToClients(member.member_id, 'alert', {
           memberId: member.member_id,
-          memberName: member.name,
           type: 'bloodPressure',
-          value: { systolic, diastolic },
-          measuredAt: measuredAt.toISOString(),
+          value: systolic,
+          message: `혈압 이상: ${systolic}/${diastolic} mmHg`,
+          measured_at: measuredAt.toISOString(),
         });
       }
     } catch (err) {
@@ -262,11 +263,11 @@ export class SimulatorService implements OnModuleInit {
       // WebSocket push
       this.healthGateway.pushToClients(member.member_id, 'weight', {
         memberId: member.member_id,
-        weightKg,
+        weight_kg: weightKg,
         bmi,
-        skeletalMuscleMassKg,
-        bodyFatPercentage,
-        measuredAt: measuredAt.toISOString(),
+        skeletal_muscle_mass: skeletalMuscleMassKg,
+        body_fat_percentage: bodyFatPercentage,
+        measured_at: measuredAt.toISOString(),
       });
     } catch (err) {
       this.logger.error(`weight handler error: ${err.message}`, { context: 'SimulatorService' });
@@ -292,9 +293,9 @@ export class SimulatorService implements OnModuleInit {
       // WebSocket push
       this.healthGateway.pushToClients(member.member_id, 'glucose', {
         memberId: member.member_id,
-        glucoseValue,
+        glucose_value: glucoseValue,
         status,
-        measuredAt: measuredAt.toISOString(),
+        measured_at: measuredAt.toISOString(),
       });
 
       // 이상 감지
@@ -305,10 +306,10 @@ export class SimulatorService implements OnModuleInit {
 
         this.healthGateway.pushToClients(member.member_id, 'alert', {
           memberId: member.member_id,
-          memberName: member.name,
           type: 'glucose',
-          value: { glucoseValue, status },
-          measuredAt: measuredAt.toISOString(),
+          value: glucoseValue,
+          message: `혈당 이상: ${glucoseValue} mg/dL (${status})`,
+          measured_at: measuredAt.toISOString(),
         });
       }
     } catch (err) {
@@ -332,8 +333,8 @@ export class SimulatorService implements OnModuleInit {
       // WebSocket push
       this.healthGateway.pushToClients(member.member_id, 'stepCount', {
         memberId: member.member_id,
-        cumulativeSteps,
-        measuredAt: measuredAt.toISOString(),
+        cumulative_steps: cumulativeSteps,
+        measured_at: measuredAt.toISOString(),
       });
     } catch (err) {
       this.logger.error(`stepCount handler error: ${err.message}`, { context: 'SimulatorService' });

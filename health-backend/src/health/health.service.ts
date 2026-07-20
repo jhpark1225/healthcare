@@ -64,6 +64,28 @@ export class HealthService {
     );
   }
 
+  // ────────────────── 통합 최신 조회 ──────────────────
+
+  async findLatest(user: any, memberId: string, limit = 20) {
+    this.checkAuth(user, memberId);
+    const [heartRates, bloodPressures, glucoses, steps, weights] = await Promise.all([
+      this.queryRepo(this.heartRateRepository, 'hr', memberId, { limit }),
+      this.queryRepo(this.bloodPressureRepository, 'bp', memberId, { limit }),
+      this.queryRepo(this.glucoseRepository, 'g', memberId, { limit }),
+      this.queryRepo(this.stepRepository, 's', memberId, { limit }),
+      this.queryRepo(this.weightRepository, 'w', memberId, { limit }),
+    ]);
+    return {
+      member_id: memberId,
+      fetched_at: new Date().toISOString(),
+      heartRates,
+      bloodPressures,
+      glucoses,
+      steps,
+      weights,
+    };
+  }
+
   // ────────────────── 개별 건강 데이터 조회 ──────────────────
 
   async findHeartRates(user: any, memberId: string, params: HealthQueryParams) {
