@@ -1,0 +1,10 @@
+health-web/node_modules
+health-web/dist
+health-backend/node_modules
+health-backend/dist
+health-mobile/node_modules
+**/.git
+**/*.log
+**/logs/
+**/coverage/
+**/.env
