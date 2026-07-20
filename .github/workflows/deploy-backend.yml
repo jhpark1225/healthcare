@@ -1,5 +1,6 @@
 name: Deploy Backend
 
+# health-backend/ 또는 이 워크플로 파일 변경 시 main 브랜치 push에 실행
 on:
   push:
     branches: [main]
@@ -15,56 +16,67 @@ jobs:
       IMAGE_NAME:     healthcare-backend-${{ vars.BACKEND_PORT }}
       CONTAINER_NAME: healthcare-backend-${{ vars.BACKEND_PORT }}
       DEPLOY_DIR:     /app/healthcare-${{ vars.BACKEND_PORT }}/backend
-      SSH_TARGET:     ${{ vars.SERVER_HOST }}
+      SSH_TARGET:     ${{ secrets.SERVER_USER }}@${{ vars.SERVER_HOST }}
 
     steps:
+      # 1. 소스 체크아웃
       - name: Checkout
         uses: actions/checkout@v4.2.2
 
-      # SSH 에이전트 설정 (키 형식·CRLF 문제를 Action이 처리)
+      # 2. SSH 에이전트 설정 (키 형식·CRLF 처리를 Action이 담당)
       - name: SSH 에이전트 설정
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      # known_hosts 등록
+      # 3. known_hosts 등록
       - name: known_hosts 등록
         run: |
-          _HOST="${{ vars.SERVER_HOST }}"
-          ssh-keyscan -p ${{ vars.SERVER_PORT }} "${_HOST#*@}" \
+          ssh-keyscan -p ${{ vars.SERVER_PORT }} ${{ vars.SERVER_HOST }} \
             >> ~/.ssh/known_hosts 2>/dev/null || true
 
+      # 4. Docker 이미지 빌드
       - name: Docker 이미지 빌드
         working-directory: health-backend
         run: docker build -t "$IMAGE_NAME" .
 
+      # 5. 이미지 압축
       - name: 이미지 압축
         run: docker save "$IMAGE_NAME" | gzip > backend.tar.gz
 
+      # 6. 배포 디렉토리 생성
       - name: 배포 디렉토리 생성
         run: |
           ssh -p ${{ vars.SERVER_PORT }} $SSH_TARGET \
             "mkdir -p $DEPLOY_DIR"
 
+      # 7. 이미지 전송
       - name: 이미지 전송
         run: |
           scp -P ${{ vars.SERVER_PORT }} backend.tar.gz \
             $SSH_TARGET:$DEPLOY_DIR/backend.tar.gz
 
+      # 8. 배포 스크립트 생성 → 서버 전송 → 실행
+      #
+      # heredoc 미인용(SCRIPT) → 러너 환경변수가 스크립트에 직접 치환됨
+      # JWT_ACCESS_TTL_SEC / JWT_REFRESH_TTL_SEC: 숫자에 's' 접미사 추가
+      #   (ms 라이브러리 포맷: 86400 → "86400s")
       - name: 배포 스크립트 생성 및 실행
         env:
-          APP_PORT:           ${{ vars.BACKEND_PORT }}
-          DB_HOST:            ${{ vars.DB_HOST }}
-          DB_PORT:            ${{ vars.DB_PORT }}
-          DB_NAME:            ${{ vars.DB_NAME }}
-          DB_USER:            ${{ secrets.DB_USER }}
-          DB_PASSWORD:        ${{ secrets.DB_PASSWORD }}
-          JWT_SECRET:         ${{ secrets.JWT_ACCESS_SECRET }}
-          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
-          JWT_ACCESS_TTL:     ${{ vars.JWT_ACCESS_TTL_SEC }}
-          JWT_REFRESH_TTL:    ${{ vars.JWT_REFRESH_TTL_SEC }}
-          SIMULATOR_URL:      ${{ vars.SIMULATOR_URL }}
-          SLACK_WEBHOOK_URL:  ${{ secrets.SLACK_WEBHOOK_URL }}
+          APP_PORT:                     ${{ vars.BACKEND_PORT }}
+          DB_HOST:                      ${{ vars.DB_HOST }}
+          DB_PORT:                      ${{ vars.DB_PORT }}
+          DB_NAME:                      ${{ vars.DB_NAME }}
+          DB_USER:                      ${{ secrets.DB_USER }}
+          DB_PASSWORD:                  ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET:                   ${{ secrets.JWT_ACCESS_SECRET }}
+          JWT_REFRESH_SECRET:           ${{ secrets.JWT_REFRESH_SECRET }}
+          JWT_ACCESS_TTL:               ${{ vars.JWT_ACCESS_TTL_SEC }}
+          JWT_REFRESH_TTL:              ${{ vars.JWT_REFRESH_TTL_SEC }}
+          SIMULATOR_URL:                ${{ vars.SIMULATOR_URL }}
+          SIMULATOR_RECONNECT_ATTEMPTS: ${{ vars.SIMULATOR_RECONNECT_ATTEMPTS }}
+          SIMULATOR_TIMEOUT_MS:         ${{ vars.SIMULATOR_TIMEOUT_MS }}
+          SLACK_WEBHOOK_URL:            ${{ vars.SLACK_WEBHOOK_URL }}
         run: |
           cat > /tmp/deploy_${APP_PORT}.sh << SCRIPT
           #!/bin/bash
@@ -96,6 +108,8 @@ jobs:
             -e JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET} \
             -e JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_TTL}s \
             -e SIMULATOR_URL=${SIMULATOR_URL} \
+            -e SIMULATOR_RECONNECT_ATTEMPTS=${SIMULATOR_RECONNECT_ATTEMPTS} \
+            -e SIMULATOR_TIMEOUT_MS=${SIMULATOR_TIMEOUT_MS} \
             -e AI_API_URL=http://localhost:8000 \
             -e AI_API_TIMEOUT_MS=30000 \
             -e SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL} \

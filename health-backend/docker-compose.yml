@@ -19,29 +19,31 @@ services:
     volumes:
       - ./logs:/app/logs
     environment:
-      PORT:                    ${BACKEND_PORT:-3000}
-      NODE_ENV:                ${NODE_ENV:-development}
+      PORT:                         ${BACKEND_PORT:-3000}
+      NODE_ENV:                     ${NODE_ENV:-development}
       # DB
-      DB_HOST:                 ${DB_HOST}
-      DB_PORT:                 ${DB_PORT:-5432}
-      DB_NAME:                 ${DB_NAME}
-      DB_USER:                 ${DB_USER}
-      DB_PASSWORD:             ${DB_PASSWORD}
+      DB_HOST:                      ${DB_HOST}
+      DB_PORT:                      ${DB_PORT:-5432}
+      DB_NAME:                      ${DB_NAME}
+      DB_USER:                      ${DB_USER}
+      DB_PASSWORD:                  ${DB_PASSWORD}
       # JWT
-      JWT_SECRET:              ${JWT_SECRET}
-      JWT_EXPIRES_IN:          ${JWT_EXPIRES_IN:-1d}
-      JWT_REFRESH_SECRET:      ${JWT_REFRESH_SECRET}
-      JWT_REFRESH_EXPIRES_IN:  ${JWT_REFRESH_EXPIRES_IN:-7d}
+      JWT_SECRET:                   ${JWT_SECRET}
+      JWT_EXPIRES_IN:               ${JWT_EXPIRES_IN:-1d}
+      JWT_REFRESH_SECRET:           ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRES_IN:       ${JWT_REFRESH_EXPIRES_IN:-7d}
       # 시뮬레이터
-      SIMULATOR_URL:           ${SIMULATOR_URL}
+      SIMULATOR_URL:                ${SIMULATOR_URL}
+      SIMULATOR_RECONNECT_ATTEMPTS: ${SIMULATOR_RECONNECT_ATTEMPTS:-5}
+      SIMULATOR_TIMEOUT_MS:         ${SIMULATOR_TIMEOUT_MS:-10000}
       # AI Agent
-      AI_API_URL:              ${AI_API_URL:-http://localhost:8000}
-      AI_API_TIMEOUT_MS:       ${AI_API_TIMEOUT_MS:-30000}
+      AI_API_URL:                   ${AI_API_URL:-http://localhost:8000}
+      AI_API_TIMEOUT_MS:            ${AI_API_TIMEOUT_MS:-30000}
       # Slack
-      SLACK_WEBHOOK_URL:       ${SLACK_WEBHOOK_URL}
+      SLACK_WEBHOOK_URL:            ${SLACK_WEBHOOK_URL}
       # 로그
-      LOG_DIR:                 /app/logs
-      LOG_LEVEL:               ${LOG_LEVEL:-debug}
-      LOG_RETENTION_DAYS:      ${LOG_RETENTION_DAYS:-7d}
+      LOG_DIR:                      /app/logs
+      LOG_LEVEL:                    ${LOG_LEVEL:-debug}
+      LOG_RETENTION_DAYS:           ${LOG_RETENTION_DAYS:-7d}
       # 데이터 보존
-      DATA_RETENTION_DAYS:     ${DATA_RETENTION_DAYS:-7}
+      DATA_RETENTION_DAYS:          ${DATA_RETENTION_DAYS:-7}
