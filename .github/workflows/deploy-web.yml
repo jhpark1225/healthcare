@@ -52,8 +52,10 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${{ vars.SERVER_PORT }} ${{ vars.SERVER_HOST }} \
-            >> ~/.ssh/known_hosts 2>/dev/null
+          # SERVER_HOST = user@hostname 형태 — ssh-keyscan은 hostname만 필요
+          _HOST="${{ vars.SERVER_HOST }}"
+          ssh-keyscan -p ${{ vars.SERVER_PORT }} "${_HOST#*@}" \
+            >> ~/.ssh/known_hosts 2>/dev/null || true
 
       # 6. 서버에 배포 디렉토리 생성
       - name: 배포 디렉토리 생성
