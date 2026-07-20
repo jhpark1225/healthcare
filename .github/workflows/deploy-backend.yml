@@ -29,11 +29,17 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      # 3. known_hosts 등록
+      # 3. known_hosts 등록 (실패해도 계속 진행 — StrictHostKeyChecking=no 로 보완)
       - name: known_hosts 등록
         run: |
           ssh-keyscan -p ${{ vars.SERVER_PORT }} ${{ vars.SERVER_HOST }} \
             >> ~/.ssh/known_hosts 2>/dev/null || true
+          # SSH 전역 옵션: 호스트키 검증 우회, 키 자동 수락
+          cat >> ~/.ssh/config << 'EOF'
+          Host *
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+          EOF
 
       # 4. Docker 이미지 빌드
       - name: Docker 이미지 빌드
