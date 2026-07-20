@@ -23,7 +23,7 @@ jobs:
     steps:
       # 1. 소스 체크아웃
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       # 2. Docker 이미지 빌드 (health-backend/ 컨텍스트)
       - name: Docker 이미지 빌드
