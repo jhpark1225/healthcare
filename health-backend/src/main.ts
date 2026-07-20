@@ -40,7 +40,7 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT || 3000;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
   logger.log(`Application  : http://localhost:${port}`, 'Bootstrap');
   logger.log(`Swagger Docs : http://localhost:${port}/api-docs`, 'Bootstrap');
