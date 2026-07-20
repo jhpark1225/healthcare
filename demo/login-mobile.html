@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCR-001 로그인 — Mobile (React Native)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── DESIGN-apple.md tokens ───────────────────────────────── */
+    :root {
+      --primary:          #0066cc;
+      --primary-focus:    #0071e3;
+      --ink:              #1d1d1f;
+      --ink-muted-48:     #7a7a7a;
+      --hairline:         #e0e0e0;
+      --canvas:           #ffffff;
+      --canvas-parchment: #f5f5f7;
+      --on-primary:       #ffffff;
+      --error:            #ff3b30;
+
+      --r-lg:   18px;
+      --r-pill: 9999px;
+
+      --sp-xs:   8px;
+      --sp-sm:  12px;
+      --sp-lg:  24px;
+      --sp-xl:  32px;
+      --sp-xxl: 48px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* 데모 전체 배경 */
+    body {
+      min-height: 100vh;
+      background: #e5e5ea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'SF Pro Text', 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 핸드폰 프레임 */
+    .phone-frame {
+      width: 390px;
+      height: 844px;
+      background: var(--canvas-parchment);
+      border-radius: 54px;
+      box-shadow:
+        0 0 0 10px #1d1d1f,
+        0 0 0 12px #3a3a3c,
+        0 32px 80px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 상단 Dynamic Island */
+    .notch {
+      width: 126px;
+      height: 37px;
+      background: #1d1d1f;
+      border-radius: 0 0 20px 20px;
+      margin: 0 auto;
+      flex-shrink: 0;
+    }
+
+    /* 화면 영역 */
+    .screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 var(--sp-xl) var(--sp-xxl);
+      background: var(--canvas-parchment);
+    }
+
+    /* 아이콘 */
+    .brand-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: var(--sp-xl);
+    }
+
+    /* 제목 — display-md: 28px / 600 / ls -0.374px */
+    h1 {
+      font-family: 'SF Pro Display', 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 28px;
+      font-weight: 600;
+      line-height: 1.14;
+      letter-spacing: -0.374px;
+      color: var(--ink);
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    /* 부제목 — body: 17px / 400 / ls -0.374px */
+    .subtitle {
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.47;
+      letter-spacing: -0.374px;
+      color: var(--ink-muted-48);
+      text-align: center;
+      margin-bottom: var(--sp-xl);
+    }
+
+    /* 폼 */
+    form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-sm);
+    }
+
+    /* 입력 — search-input 스펙: pill, h44, 1px rgba border, 17px body */
+    input {
+      width: 100%;
+      height: 44px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: var(--r-pill);
+      padding: 0 20px;
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 400;
+      letter-spacing: -0.374px;
+      color: var(--ink);
+      background: var(--canvas);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input::placeholder { color: var(--ink-muted-48); }
+
+    input:focus {
+      border-color: transparent;
+      outline: 2px solid var(--primary-focus);
+      outline-offset: 0;
+    }
+
+    /* 에러 메시지 — caption: 14px / 400 / ls -0.224px */
+    .error-msg {
+      display: none;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.43;
+      letter-spacing: -0.224px;
+      color: var(--error);
+      text-align: center;
+      padding: 0 4px;
+    }
+    .error-msg.show { display: block; }
+
+    /* 버튼 — button-primary: pill, #0066cc, 17px/400 */
+    .btn-login {
+      margin-top: var(--sp-xs);
+      width: 100%;
+      height: 44px;
+      background: var(--primary);
+      color: var(--on-primary);
+      border: none;
+      border-radius: var(--r-pill);
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 400;
+      letter-spacing: -0.374px;
+      cursor: pointer;
+      transition: transform 0.1s ease, opacity 0.15s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .btn-login:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .btn-login:not(:disabled):active {
+      transform: scale(0.95); /* 시스템 공통 micro-interaction */
+    }
+
+    .btn-login:focus-visible {
+      outline: 2px solid var(--primary-focus);
+      outline-offset: 2px;
+    }
+
+    /* 구분선 */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: var(--hairline);
+      margin: var(--sp-lg) 0;
+    }
+
+    /* 회원가입 — caption: 14px / ls -0.224px */
+    .signup-row {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.43;
+      letter-spacing: -0.224px;
+      color: var(--ink-muted-48);
+      text-align: center;
+    }
+
+    .signup-row a {
+      color: var(--primary); /* text-link: primary */
+      text-decoration: none;
+    }
+
+    /* 하단 홈 인디케이터 */
+    .home-indicator {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: var(--canvas-parchment);
+    }
+
+    .home-indicator span {
+      width: 134px;
+      height: 5px;
+      background: var(--ink);
+      border-radius: var(--r-pill);
+      opacity: 0.2;
+    }
+
+    /* 데모 레이블 */
+    .demo-label {
+      position: absolute;
+      top: -30px;
+      left: 0;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      color: #636366;
+      letter-spacing: 0.3px;
+    }
+
+    .phone-wrapper {
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-wrapper">
+    <span class="demo-label">SCR-001 · 로그인 — React Native (Mobile)</span>
+
+    <div class="phone-frame">
+      <div class="notch"></div>
+
+      <div class="screen">
+
+        <!-- 헬스케어 아이콘 -->
+        <svg class="brand-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="24" y="5"  width="16" height="54" rx="8" fill="#1d1d1f"/>
+          <rect x="5"  y="24" width="54" height="16" rx="8" fill="#1d1d1f"/>
+        </svg>
+
+        <h1>로그인</h1>
+        <p class="subtitle">건강 관리 플랫폼</p>
+
+        <form id="loginForm" onsubmit="return handleLogin(event)">
+          <input
+            type="text"
+            id="userId"
+            placeholder="아이디"
+            autocomplete="username"
+            aria-label="아이디"
+            oninput="checkFields()"
+          />
+          <input
+            type="password"
+            id="password"
+            placeholder="암호"
+            autocomplete="current-password"
+            aria-label="암호"
+            oninput="checkFields()"
+          />
+
+          <p class="error-msg" id="errorMsg" role="alert">
+            아이디 또는 암호가 올바르지 않습니다.
+          </p>
+
+          <button type="submit" class="btn-login" id="loginBtn" disabled>
+            로그인
+          </button>
+        </form>
+
+        <div class="divider" role="separator"></div>
+
+        <p class="signup-row">
+          계정이 없으신가요?&nbsp;<a href="#">가입하기</a>
+        </p>
+
+      </div>
+
+      <div class="home-indicator"><span></span></div>
+    </div>
+  </div>
+
+  <script>
+    function checkFields() {
+      const id  = document.getElementById('userId').value.trim();
+      const pw  = document.getElementById('password').value;
+      document.getElementById('loginBtn').disabled = !(id && pw);
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      // 데모: 에러 메시지 토글
+      const err = document.getElementById('errorMsg');
+      err.classList.toggle('show');
+      return false;
+    }
+  </script>
+
+</body>
+</html>

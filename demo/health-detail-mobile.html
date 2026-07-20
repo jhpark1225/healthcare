@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCR-003 건강 상세 — Mobile (React Native)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── DESIGN-apple.md tokens ──────────────────────────────── */
+    :root {
+      --primary:          #0066cc;
+      --primary-focus:    #0071e3;
+      --ink:              #1d1d1f;
+      --ink-muted-48:     #7a7a7a;
+      --body-muted:       #cccccc;
+      --hairline:         #e0e0e0;
+      --divider-soft:     #f0f0f0;
+      --canvas:           #ffffff;
+      --canvas-parchment: #f5f5f7;
+      --on-primary:       #ffffff;
+      /* system colors (Apple HIG) */
+      --sys-green:  #34c759;
+      --sys-orange: #ff9500;
+      --sys-red:    #ff3b30;
+
+      --r-sm:   8px;
+      --r-lg:   18px;
+      --r-pill: 9999px;
+
+      --sp-xs:   8px;
+      --sp-sm:  12px;
+      --sp-lg:  24px;
+      --sp-xl:  32px;
+      --sp-xxl: 48px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #e5e5ea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'SF Pro Text', 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: 40px 16px;
+    }
+
+    .phone-wrapper { position: relative; }
+    .demo-label {
+      position: absolute; top: -28px; left: 0;
+      font-size: 12px; color: #636366; letter-spacing: 0.3px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* ── 폰 프레임 ───────────────────────────────────────────── */
+    .phone-frame {
+      width: 390px; height: 844px;
+      background: var(--canvas-parchment);
+      border-radius: 54px;
+      box-shadow: 0 0 0 10px #1d1d1f, 0 0 0 12px #3a3a3c, 0 32px 80px rgba(0,0,0,0.45);
+      overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    .notch {
+      width: 126px; height: 37px;
+      background: #1d1d1f;
+      border-radius: 0 0 20px 20px;
+      margin: 0 auto; flex-shrink: 0;
+    }
+
+    .screen { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── 헤더 ─────────────────────────────────────────────────── */
+    .header {
+      display: flex; align-items: center;
+      padding: 10px 16px 8px;
+      background: var(--canvas-parchment);
+      flex-shrink: 0; gap: var(--sp-xs);
+    }
+
+    .btn-back {
+      width: 36px; height: 36px; border: none; background: transparent;
+      color: var(--primary); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--r-pill); flex-shrink: 0;
+    }
+
+    /* tagline: 21px / 600 */
+    .header-title {
+      flex: 1;
+      font-family: 'SF Pro Display', 'Inter', system-ui, sans-serif;
+      font-size: 17px; font-weight: 600;
+      letter-spacing: -0.374px; color: var(--ink);
+    }
+
+    .conn-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--sys-green); flex-shrink: 0;
+      transition: background 0.3s ease;
+      animation: pulse 2s infinite;
+    }
+
+    .conn-dot.off { background: var(--ink-muted-48); animation: none; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.5; }
+    }
+
+    /* ── 스크롤 영역 ─────────────────────────────────────────── */
+    .scroll-content {
+      flex: 1; overflow-y: auto;
+      padding: 8px 14px 16px;
+      display: flex; flex-direction: column; gap: var(--sp-xs);
+      background: var(--canvas-parchment);
+    }
+
+    .scroll-content::-webkit-scrollbar { display: none; }
+
+    /* ── 프로필 카드 (store-utility-card 스펙) ───────────────── */
+    .profile-card {
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--r-lg);
+      padding: 16px;
+      display: flex; align-items: center; gap: 14px;
+      flex-shrink: 0;
+    }
+
+    .avatar {
+      width: 52px; height: 52px; border-radius: var(--r-pill);
+      background: var(--canvas-parchment); border: 1px solid var(--hairline);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 600; color: var(--ink); flex-shrink: 0;
+    }
+
+    .profile-info { flex: 1; min-width: 0; }
+
+    /* body-strong: 17px / 600 */
+    .profile-name {
+      font-size: 17px; font-weight: 600; letter-spacing: -0.374px;
+      color: var(--ink); display: flex; align-items: center; gap: 6px;
+      margin-bottom: 2px;
+    }
+
+    .gender-badge {
+      font-size: 11px; font-weight: 600; padding: 2px 7px;
+      border-radius: var(--r-pill);
+    }
+    .gender-badge.male   { background: rgba(0,102,204,0.08); color: var(--primary); }
+    .gender-badge.female { background: var(--canvas-parchment); color: var(--ink-muted-48); }
+
+    /* caption: 14px / 400 */
+    .profile-birth {
+      font-size: 13px; font-weight: 400; letter-spacing: -0.224px;
+      color: var(--ink-muted-48); margin-bottom: 6px;
+    }
+
+    .disease-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+
+    .disease-tag {
+      font-size: 11px; font-weight: 400; padding: 2px 8px;
+      border-radius: var(--r-pill);
+      background: var(--canvas-parchment);
+      border: 1px solid var(--hairline);
+      color: var(--ink-muted-48);
+    }
+
+    /* ── 알림 배너 ───────────────────────────────────────────── */
+    .alert-banner {
+      display: none;
+      background: rgba(255,59,48,0.08);
+      border: 1px solid rgba(255,59,48,0.2);
+      border-radius: var(--r-sm);
+      padding: 10px 12px;
+      flex-shrink: 0;
+      flex-direction: row; align-items: center; gap: 8px;
+    }
+
+    .alert-banner.show { display: flex; }
+
+    .alert-icon { font-size: 15px; flex-shrink: 0; }
+
+    .alert-text {
+      flex: 1;
+      font-size: 13px; font-weight: 600; color: var(--sys-red);
+      letter-spacing: -0.2px;
+    }
+
+    .alert-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--sys-red); font-size: 16px; line-height: 1;
+      padding: 0 2px;
+    }
+
+    /* ── 그래프 카드 ─────────────────────────────────────────── */
+    .chart-card {
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--r-lg);
+      padding: 14px 14px 10px;
+      flex-shrink: 0;
+    }
+
+    .chart-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 6px;
+    }
+
+    .chart-title-row { display: flex; flex-direction: column; gap: 2px; }
+
+    /* caption: 14px / 400 */
+    .metric-label {
+      font-size: 12px; font-weight: 600; letter-spacing: 0.4px;
+      color: var(--ink-muted-48); text-transform: uppercase;
+    }
+
+    .live-badge {
+      font-size: 10px; font-weight: 600; color: var(--sys-green);
+      letter-spacing: 0.3px;
+    }
+
+    .metric-current { text-align: right; }
+
+    /* body-strong: 17px / 600 */
+    .metric-value {
+      font-size: 22px; font-weight: 600; letter-spacing: -0.374px;
+      color: var(--ink); line-height: 1.1;
+      transition: color 0.3s ease;
+    }
+
+    .metric-value.warn   { color: var(--sys-orange); }
+    .metric-value.danger { color: var(--sys-red); }
+
+    .metric-unit {
+      font-size: 12px; font-weight: 400; color: var(--ink-muted-48);
+      margin-left: 2px;
+    }
+
+    /* 이중 수치 (혈압) */
+    .metric-dual {
+      font-size: 14px; font-weight: 600; letter-spacing: -0.3px;
+      color: var(--ink); line-height: 1.2; text-align: right;
+    }
+
+    .metric-dual .sep { color: var(--ink-muted-48); margin: 0 2px; }
+
+    .chart-canvas {
+      width: 100%; height: 100px;
+      display: block;
+    }
+
+    .home-indicator {
+      height: 34px; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0;
+      background: var(--canvas-parchment);
+    }
+
+    .home-indicator span {
+      width: 134px; height: 5px;
+      background: var(--ink); border-radius: var(--r-pill); opacity: 0.2;
+    }
+  </style>
+</head>
+<body>
+
+<div class="phone-wrapper">
+  <span class="demo-label">SCR-003 · 환자 건강 상세 — React Native (Mobile)</span>
+
+  <div class="phone-frame">
+    <div class="notch"></div>
+
+    <div class="screen">
+      <!-- 헤더 -->
+      <div class="header">
+        <button class="btn-back" aria-label="뒤로가기">
+          <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
+            <path d="M9 1L1 9l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <span class="header-title">박지훈 · 건강 상세</span>
+        <span class="conn-dot" id="connDot" title="실시간 연결 중"></span>
+      </div>
+
+      <div class="scroll-content">
+
+        <!-- 프로필 카드 -->
+        <div class="profile-card">
+          <div class="avatar">박</div>
+          <div class="profile-info">
+            <div class="profile-name">
+              박지훈
+              <span class="gender-badge male">남</span>
+            </div>
+            <div class="profile-birth">1978.11.08 · 45세</div>
+            <div class="disease-tags">
+              <span class="disease-tag">고혈압</span>
+              <span class="disease-tag">당뇨병</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 알림 배너 -->
+        <div class="alert-banner" id="alertBanner" role="alert">
+          <span class="alert-icon">⚠️</span>
+          <span class="alert-text" id="alertText">이상 수치 감지됨</span>
+          <button class="alert-close" onclick="closeAlert()" aria-label="닫기">×</button>
+        </div>
+
+        <!-- 심박수 -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title-row">
+              <span class="metric-label">심박수</span>
+              <span class="live-badge">● LIVE · 4초 갱신</span>
+            </div>
+            <div class="metric-current">
+              <span class="metric-value" id="hrVal">--</span>
+              <span class="metric-unit">bpm</span>
+            </div>
+          </div>
+          <canvas class="chart-canvas" id="hrCanvas"></canvas>
+        </div>
+
+        <!-- 혈압 -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title-row">
+              <span class="metric-label">혈압</span>
+              <span class="live-badge">● LIVE · 2시간 갱신</span>
+            </div>
+            <div class="metric-current">
+              <div class="metric-dual">
+                <span id="bpSysVal" style="color:#0066cc">--</span>
+                <span class="sep">/</span>
+                <span id="bpDiaVal" style="color:#7a7a7a">--</span>
+                <span class="metric-unit">mmHg</span>
+              </div>
+            </div>
+          </div>
+          <canvas class="chart-canvas" id="bpCanvas"></canvas>
+        </div>
+
+        <!-- 혈당 -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title-row">
+              <span class="metric-label">혈당</span>
+              <span class="live-badge">● LIVE · 1시간 갱신</span>
+            </div>
+            <div class="metric-current">
+              <span class="metric-value" id="glucoseVal">--</span>
+              <span class="metric-unit">mg/dL</span>
+            </div>
+          </div>
+          <canvas class="chart-canvas" id="glucoseCanvas"></canvas>
+        </div>
+
+        <!-- 몸무게 -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title-row">
+              <span class="metric-label">몸무게</span>
+              <span class="live-badge">● 하루 3회 갱신</span>
+            </div>
+            <div class="metric-current">
+              <span class="metric-value" id="weightVal">--</span>
+              <span class="metric-unit">kg</span>
+            </div>
+          </div>
+          <canvas class="chart-canvas" id="weightCanvas"></canvas>
+        </div>
+
+        <!-- BMI -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title-row">
+              <span class="metric-label">BMI</span>
+              <span class="live-badge">● 하루 3회 갱신</span>
+            </div>
+            <div class="metric-current">
+              <span class="metric-value" id="bmiVal">--</span>
+            </div>
+          </div>
+          <canvas class="chart-canvas" id="bmiCanvas"></canvas>
+        </div>
+
+        <!-- 골격근량 -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title-row">
+              <span class="metric-label">골격근량</span>
+              <span class="live-badge">● 하루 3회 갱신</span>
+            </div>
+            <div class="metric-current">
+              <span class="metric-value" id="muscleVal">--</span>
+              <span class="metric-unit">kg</span>
+            </div>
+          </div>
+          <canvas class="chart-canvas" id="muscleCanvas"></canvas>
+        </div>
+
+        <!-- 체지방률 -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title-row">
+              <span class="metric-label">체지방률</span>
+              <span class="live-badge">● 하루 3회 갱신</span>
+            </div>
+            <div class="metric-current">
+              <span class="metric-value" id="fatVal">--</span>
+              <span class="metric-unit">%</span>
+            </div>
+          </div>
+          <canvas class="chart-canvas" id="fatCanvas"></canvas>
+        </div>
+
+      </div><!-- /scroll-content -->
+    </div><!-- /screen -->
+
+    <div class="home-indicator"><span></span></div>
+  </div><!-- /phone-frame -->
+</div><!-- /phone-wrapper -->
+
+<script>
+/* ── StreamingLineChart ────────────────────────────────────────── */
+class StreamingLineChart {
+  constructor(canvas, cfg = {}) {
+    this.canvas = canvas;
+    this.ctx    = canvas.getContext('2d');
+    this.series = [];   // [{points, color, warningMin, dangerMin}]
+    this.maxPts = cfg.maxPoints || 20;
+    this.yMin   = cfg.yMin ?? null;
+    this.yMax   = cfg.yMax ?? null;
+    this.pad    = { t: 12, r: 10, b: 22, l: 36 };
+    this._resize();
+  }
+
+  addSeries(cfg = {}) {
+    this.series.push({
+      points:     [],
+      color:      cfg.color      || '#0066cc',
+      warnColor:  '#ff9500',
+      dangerColor:'#ff3b30',
+      warningMin: cfg.warningMin ?? null,
+      dangerMin:  cfg.dangerMin  ?? null,
+    });
+    return this.series.length - 1;
+  }
+
+  _resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const cw = this.canvas.parentElement.clientWidth || 320;
+    const ch = this.canvas.offsetHeight || 100;
+    this.canvas.width  = cw * dpr;
+    this.canvas.height = ch * dpr;
+    this.canvas.style.width  = cw + 'px';
+    this.canvas.style.height = ch + 'px';
+    this.ctx.scale(dpr, dpr);
+    this.W = cw; this.H = ch;
+  }
+
+  push(idx, value, flags = {}) {
+    const s = this.series[idx];
+    s.points.push({ value, flags });
+    if (s.points.length > this.maxPts) s.points.shift();
+    this.draw();
+  }
+
+  _pointColor(s, value, flags) {
+    if (flags.abnormal || (s.dangerMin != null && value >= s.dangerMin)) return s.dangerColor;
+    if (s.warningMin != null && value >= s.warningMin) return s.warnColor;
+    return s.color;
+  }
+
+  draw() {
+    const { ctx, W, H, pad, series, maxPts, yMin: cfgMin, yMax: cfgMax } = this;
+    if (!W) return;
+    ctx.clearRect(0, 0, W, H);
+
+    const allVals = series.flatMap(s => s.points.map(p => p.value));
+    if (allVals.length === 0) {
+      ctx.fillStyle = '#c7c7cc';
+      ctx.font = '11px Inter,system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('데이터 수신 중...', W / 2, H / 2 + 4);
+      return;
+    }
+
+    const yMin = cfgMin ?? Math.min(...allVals) * 0.94;
+    const yMax = cfgMax ?? Math.max(...allVals) * 1.06;
+    const yRng = Math.max(yMax - yMin, 1);
+
+    const cW = W - pad.l - pad.r;
+    const cH = H - pad.t - pad.b;
+    const toX = (s, i) => pad.l + ((maxPts - s.points.length) + i) * (cW / (maxPts - 1));
+    const toY = v => pad.t + cH - ((v - yMin) / yRng) * cH;
+
+    /* grid */
+    ctx.strokeStyle = '#f0f0f0'; ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.t + (cH / 4) * i;
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+      const lv = yMax - (yRng / 4) * i;
+      ctx.fillStyle = '#c7c7cc';
+      ctx.font = '9px Inter,system-ui,sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(Number(lv.toFixed(1)), pad.l - 3, y + 3.5);
+    }
+
+    /* per series */
+    series.forEach((s, si) => {
+      if (s.points.length < 2) return;
+
+      /* fill — first series only */
+      if (si === 0) {
+        const baseCol = s.color;
+        const rgb = parseInt(baseCol.slice(1), 16);
+        const r = (rgb >> 16) & 255, g = (rgb >> 8) & 255, b = rgb & 255;
+        const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
+        grad.addColorStop(0, `rgba(${r},${g},${b},0.13)`);
+        grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        ctx.beginPath();
+        ctx.moveTo(toX(s, 0), toY(s.points[0].value));
+        s.points.forEach((p, i) => { if (i > 0) ctx.lineTo(toX(s, i), toY(p.value)); });
+        ctx.lineTo(toX(s, s.points.length - 1), pad.t + cH);
+        ctx.lineTo(toX(s, 0), pad.t + cH);
+        ctx.closePath();
+        ctx.fillStyle = grad; ctx.fill();
+      }
+
+      /* line */
+      for (let i = 1; i < s.points.length; i++) {
+        ctx.beginPath();
+        ctx.moveTo(toX(s, i - 1), toY(s.points[i - 1].value));
+        ctx.lineTo(toX(s, i), toY(s.points[i].value));
+        ctx.strokeStyle = this._pointColor(s, s.points[i].value, s.points[i].flags);
+        ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+        ctx.stroke();
+      }
+
+      /* points */
+      s.points.forEach((p, i) => {
+        const col = this._pointColor(s, p.value, p.flags);
+        const isLast = i === s.points.length - 1;
+        ctx.beginPath();
+        ctx.arc(toX(s, i), toY(p.value), isLast ? 4.5 : 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = col; ctx.fill();
+        if (isLast) {
+          ctx.beginPath();
+          ctx.arc(toX(s, i), toY(p.value), 8, 0, Math.PI * 2);
+          ctx.strokeStyle = col; ctx.lineWidth = 1.5;
+          ctx.globalAlpha = 0.25; ctx.stroke(); ctx.globalAlpha = 1;
+        }
+      });
+    });
+  }
+}
+
+/* ── 차트 초기화 ──────────────────────────────────────────────── */
+const HR  = new StreamingLineChart(document.getElementById('hrCanvas'),
+  { yMin: 40, yMax: 160, maxPoints: 20 });
+const S0  = HR.addSeries({ color: '#0066cc', dangerMin: 100 });
+
+const BP  = new StreamingLineChart(document.getElementById('bpCanvas'),
+  { yMin: 55, yMax: 195, maxPoints: 20 });
+const BP_SYS = BP.addSeries({ color: '#0066cc', dangerMin: 140 });
+const BP_DIA = BP.addSeries({ color: '#7a7a7a', dangerMin: 90  });
+
+const GL  = new StreamingLineChart(document.getElementById('glucoseCanvas'),
+  { yMin: 60, yMax: 220, maxPoints: 20 });
+const S2  = GL.addSeries({ color: '#0066cc', warningMin: 110, dangerMin: 140 });
+
+const WT  = new StreamingLineChart(document.getElementById('weightCanvas'),
+  { yMin: 82, yMax: 95, maxPoints: 20 });
+const S3  = WT.addSeries({ color: '#0066cc' });
+
+const BM  = new StreamingLineChart(document.getElementById('bmiCanvas'),
+  { yMin: 25, yMax: 34, maxPoints: 20 });
+const S4  = BM.addSeries({ color: '#0066cc' });
+
+const MU  = new StreamingLineChart(document.getElementById('muscleCanvas'),
+  { yMin: 24, yMax: 32, maxPoints: 20 });
+const S5  = MU.addSeries({ color: '#0066cc' });
+
+const FA  = new StreamingLineChart(document.getElementById('fatCanvas'),
+  { yMin: 24, yMax: 38, maxPoints: 20 });
+const S6  = FA.addSeries({ color: '#0066cc' });
+
+/* ── 알림 ────────────────────────────────────────────────────── */
+let alertTimer = null;
+function showAlert(msg) {
+  const banner = document.getElementById('alertBanner');
+  document.getElementById('alertText').textContent = msg;
+  banner.classList.add('show');
+  clearTimeout(alertTimer);
+  alertTimer = setTimeout(closeAlert, 5000);
+}
+function closeAlert() {
+  document.getElementById('alertBanner').classList.remove('show');
+}
+
+function setValueEl(id, val, unit, status = 'normal') {
+  const el = document.getElementById(id);
+  el.textContent = val;
+  el.className = 'metric-value' + (status === 'danger' ? ' danger' : status === 'warn' ? ' warn' : '');
+}
+
+/* ── 시뮬레이션 ──────────────────────────────────────────────── */
+/* 박지훈: 고혈압+당뇨 */
+const rnd = (base, delta) => +(base + (Math.random() * 2 - 1) * delta).toFixed(1);
+
+/* 심박수: 4초 주기 */
+setInterval(() => {
+  const abnormal = Math.random() < 0.08;
+  const base = abnormal ? rnd(115, 8) : rnd(82, 5);
+  const val  = Math.max(42, Math.round(base));
+  HR.push(S0, val, { abnormal });
+  const status = val >= 100 || abnormal ? 'danger' : 'normal';
+  setValueEl('hrVal', val, 'bpm', status);
+  if (status === 'danger') showAlert(`심박수 이상 감지: ${val} bpm`);
+}, 1500);
+
+/* 혈압: 5초(데모) */
+setInterval(() => {
+  const sys = Math.max(90, Math.round(rnd(140, 6)));
+  const dia = Math.max(55, Math.round(rnd(90, 4)));
+  BP.push(BP_SYS, sys);
+  BP.push(BP_DIA, dia);
+  const sysDanger = sys >= 140;
+  const diaDanger = dia >= 90;
+  document.getElementById('bpSysVal').style.color = sysDanger ? '#ff3b30' : '#0066cc';
+  document.getElementById('bpDiaVal').style.color = diaDanger ? '#ff3b30' : '#7a7a7a';
+  document.getElementById('bpSysVal').textContent = sys;
+  document.getElementById('bpDiaVal').textContent = dia;
+  if (sysDanger || diaDanger) showAlert(`혈압 이상 감지: ${sys}/${dia} mmHg`);
+}, 5000);
+
+/* 혈당: 3초(데모) */
+setInterval(() => {
+  const postMeal = Math.random() < 0.25;
+  const base = postMeal ? rnd(175, 20) : rnd(130, 10);
+  const val  = Math.max(70, +base.toFixed(1));
+  GL.push(S2, val);
+  const status = val >= 140 ? 'danger' : val >= 110 ? 'warn' : 'normal';
+  setValueEl('glucoseVal', val, 'mg/dL', status);
+  if (status === 'danger') showAlert(`혈당 위험 수치 감지: ${val} mg/dL`);
+}, 3000);
+
+/* 체중 그룹: 8초(데모) */
+setInterval(() => {
+  const w   = +rnd(88, 0.3).toFixed(1);
+  const bmi = +(w / (1.72 * 1.72)).toFixed(1);
+  const fat = +(1.2 * bmi + 0.23 * 45 - 10.8 * 1 - 5.4 + rnd(0, 1)).toFixed(1);
+  const lbm = w * (1 - fat / 100);
+  const mus = +(lbm * rnd(0.44, 0.01)).toFixed(1);
+
+  WT.push(S3, w);  setValueEl('weightVal', w, 'kg');
+  BM.push(S4, bmi); setValueEl('bmiVal', bmi, '');
+  MU.push(S5, mus); setValueEl('muscleVal', mus, 'kg');
+  FA.push(S6, fat); setValueEl('fatVal', fat, '%');
+}, 8000);
+
+/* 초기 데이터 (즉시 1회) */
+(() => {
+  for (let i = 0; i < 8; i++) {
+    HR.push(S0, Math.max(42, Math.round(rnd(82, 5))));
+    GL.push(S2, Math.max(70, +rnd(130, 8).toFixed(1)));
+  }
+  for (let i = 0; i < 5; i++) {
+    BP.push(BP_SYS, Math.max(90, Math.round(rnd(140, 6))));
+    BP.push(BP_DIA, Math.max(55, Math.round(rnd(90, 4))));
+  }
+  for (let i = 0; i < 4; i++) {
+    const w = +rnd(88, 0.3).toFixed(1);
+    const bmi = +(w / (1.72 * 1.72)).toFixed(1);
+    const fat = +(1.2 * bmi + 0.23 * 45 - 10.8 * 1 - 5.4 + rnd(0, 1)).toFixed(1);
+    const mus = +(w * (1 - fat / 100) * rnd(0.44, 0.01)).toFixed(1);
+    WT.push(S3, w); BM.push(S4, bmi); MU.push(S5, mus); FA.push(S6, fat);
+  }
+  setValueEl('hrVal', 82, 'bpm');
+  document.getElementById('bpSysVal').textContent = 140;
+  document.getElementById('bpDiaVal').textContent = 90;
+  setValueEl('glucoseVal', 130, 'mg/dL');
+  setValueEl('weightVal', 88, 'kg');
+  setValueEl('bmiVal', 29.8, '');
+  setValueEl('muscleVal', 26.3, 'kg');
+  setValueEl('fatVal', 30.1, '%');
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>로그인 — 건강 관리 플랫폼</title>
+
+  <!--
+    SF Pro is Apple-proprietary.
+    Per DESIGN-apple.md: Inter (weight 600, ss03) is the closest open-source substitute.
+    Nudge letter-spacing -0.01em at display sizes; tighten line-height by 0.03 on body.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Design Tokens (DESIGN-apple.md) ─────────────────────────── */
+    :root {
+      /* colors */
+      --primary:            #0066cc;   /* Action Blue — the single interactive color */
+      --primary-focus:      #0071e3;   /* focus ring */
+      --ink:                #1d1d1f;
+      --ink-muted-48:       #7a7a7a;
+      --hairline:           #e0e0e0;   /* 1px card border */
+      --canvas:             #ffffff;
+      --canvas-parchment:   #f5f5f7;   /* page background */
+      --on-primary:         #ffffff;
+
+      /* spacing */
+      --sp-xs:   8px;
+      --sp-sm:  12px;
+      --sp-lg:  24px;
+      --sp-xl:  32px;
+      --sp-xxl: 48px;
+
+      /* radius */
+      --r-lg:   18px;    /* store-utility-card */
+      --r-pill: 9999px;  /* button-primary, search-input */
+    }
+
+    /* ── Reset ───────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Body ────────────────────────────────────────────────────── */
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--canvas-parchment);
+      /* SF Pro Text → Inter fallback (DESIGN-apple.md § Font Substitutes) */
+      font-family: 'SF Pro Text', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Card  ────────────────────────────────────────────────────
+       Based on {component.store-utility-card}:
+       bg canvas, 1px hairline border, rounded.lg (18px), padding 24px.
+       Login card gets more vertical padding for breathing room.          */
+    .card {
+      background: var(--canvas);
+      width: 400px;
+      border: 1px solid var(--hairline);
+      border-radius: var(--r-lg);
+      padding: var(--sp-xxl) var(--sp-xxl) var(--sp-xl);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      /* No box-shadow — DESIGN-apple.md: shadow is reserved for product imagery only */
+    }
+
+    /* ── Icon ────────────────────────────────────────────────────── */
+    .icon {
+      width: 44px;
+      height: 44px;
+      margin-bottom: var(--sp-lg);
+    }
+
+    /* ── Title  ───────────────────────────────────────────────────
+       {typography.display-md}: SF Pro Text 34px / 600 / lh 1.47 / ls -0.374px  */
+    h1 {
+      font-family: 'SF Pro Display', 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 28px;
+      font-weight: 600;
+      line-height: 1.14;
+      letter-spacing: -0.374px;
+      color: var(--ink);
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    /* ── Subtitle  ────────────────────────────────────────────────
+       {typography.body}: 17px / 400 / lh 1.47 / ls -0.374px              */
+    .subtitle {
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.47;
+      letter-spacing: -0.374px;
+      color: var(--ink-muted-48);
+      text-align: center;
+      margin-bottom: var(--sp-xl);
+    }
+
+    /* ── Form ────────────────────────────────────────────────────── */
+    form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-sm);
+    }
+
+    /* ── Input  ───────────────────────────────────────────────────
+       Based on {component.search-input}:
+       bg canvas, text ink in {typography.body} (17px),
+       1px solid rgba(0,0,0,0.08) border, rounded.pill, padding 12px 20px, h 44px  */
+    input {
+      width: 100%;
+      height: 44px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: var(--r-pill);
+      padding: 0 20px;
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.47;
+      letter-spacing: -0.374px;
+      color: var(--ink);
+      background: var(--canvas);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: border-color 0.1s ease;
+    }
+
+    input::placeholder {
+      color: var(--ink-muted-48);
+    }
+
+    /* Focus: 2px solid primary-focus outline ({component.button-primary-focus} pattern) */
+    input:focus {
+      border-color: transparent;
+      outline: 2px solid var(--primary-focus);
+      outline-offset: 0;
+    }
+
+    /* ── Primary button  ──────────────────────────────────────────
+       {component.button-primary}:
+       bg primary (#0066cc), text on-primary, {typography.body} (17px/400),
+       rounded.pill, padding 11px 22px.
+       Active: transform scale(0.95) — the system-wide micro-interaction.  */
+    .btn-login {
+      margin-top: var(--sp-xs);
+      width: 100%;
+      height: 44px;
+      background: var(--primary);
+      color: var(--on-primary);
+      border: none;
+      border-radius: var(--r-pill);
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.0;
+      letter-spacing: -0.374px;
+      cursor: pointer;
+      -webkit-font-smoothing: antialiased;
+      transition: transform 0.1s ease;
+    }
+
+    .btn-login:active {
+      transform: scale(0.95);
+    }
+
+    .btn-login:focus-visible {
+      outline: 2px solid var(--primary-focus);
+      outline-offset: 2px;
+    }
+
+    /* ── Hairline divider ─────────────────────────────────────────
+       Elevation via surface-color change, no decorative chrome.
+       A hairline is the lightest possible separator.                       */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: var(--hairline);
+      margin: var(--sp-lg) 0;
+    }
+
+    /* ── Signup row  ──────────────────────────────────────────────
+       {typography.caption}: 14px / 400 / lh 1.43 / ls -0.224px
+       {component.text-link}: color primary, transparent bg              */
+    .signup-row {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.43;
+      letter-spacing: -0.224px;
+      color: var(--ink-muted-48);
+      text-align: center;
+    }
+
+    .signup-row a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .signup-row a:hover {
+      text-decoration: underline;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .card {
+        width: 100%;
+        min-height: 100dvh;
+        border-radius: 0;
+        border: none;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+
+    <!-- Health cross icon in {colors.ink} -->
+    <svg class="icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="16.5" y="3"  width="11" height="38" rx="5.5" fill="#1d1d1f"/>
+      <rect x="3"   y="16.5" width="38" height="11" rx="5.5" fill="#1d1d1f"/>
+    </svg>
+
+    <h1>로그인</h1>
+    <p class="subtitle">건강 관리 플랫폼</p>
+
+    <form onsubmit="return false">
+      <input
+        type="text"
+        id="userId"
+        placeholder="아이디"
+        autocomplete="username"
+        aria-label="아이디"
+      />
+      <input
+        type="password"
+        id="password"
+        placeholder="암호"
+        autocomplete="current-password"
+        aria-label="암호"
+      />
+      <button type="submit" class="btn-login">로그인</button>
+    </form>
+
+    <div class="divider" role="separator"></div>
+
+    <p class="signup-row">
+      계정이 없으신가요?&nbsp;<a href="#">가입하기</a>
+    </p>
+
+  </div>
+
+</body>
+</html>

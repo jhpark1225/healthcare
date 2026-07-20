@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCR-001 로그인 — Web (React)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── DESIGN-apple.md tokens ───────────────────────────────── */
+    :root {
+      --primary:            #0066cc;
+      --primary-focus:      #0071e3;
+      --primary-on-dark:    #2997ff;
+      --ink:                #1d1d1f;
+      --ink-muted-48:       #7a7a7a;
+      --on-dark:            #ffffff;
+      --body-muted:         #cccccc;
+      --hairline:           #e0e0e0;
+      --canvas:             #ffffff;
+      --canvas-parchment:   #f5f5f7;
+      --surface-tile-1:     #272729;
+      --on-primary:         #ffffff;
+      --error:              #ff3b30;
+
+      --r-sm:   8px;
+      --r-lg:   18px;
+      --r-pill: 9999px;
+
+      --sp-xs:   8px;
+      --sp-sm:  12px;
+      --sp-md:  17px;
+      --sp-lg:  24px;
+      --sp-xl:  32px;
+      --sp-xxl: 48px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--canvas-parchment);
+      font-family: 'SF Pro Text', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      padding: var(--sp-lg);
+    }
+
+    /* ── 2-column 카드 ──────────────────────────────────────────
+       store-utility-card 스펙 기반:
+       bg canvas, 1px hairline, rounded.lg 18px
+       그림자 없음 — shadow는 product 이미지 전용                   */
+    .card {
+      display: flex;
+      width: 100%;
+      max-width: 840px;
+      min-height: 520px;
+      border: 1px solid var(--hairline);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+
+    /* ── 좌측 브랜드 패널 ─────────────────────────────────────
+       product-tile-dark 스펙:
+       bg surface-tile-1 (#272729), text on-dark, rounded.none
+       그라디언트 없음 — 분위기는 색상 자체로                        */
+    .brand {
+      flex: 1;
+      background: var(--surface-tile-1);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: var(--sp-xxl);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 배경 원 장식 — 순수 색상 변화만, CSS gradient 금지 */
+    .brand::before,
+    .brand::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.04);
+      pointer-events: none;
+    }
+    .brand::before { width: 340px; height: 340px; top: -100px; right: -100px; }
+    .brand::after  { width: 180px; height: 180px; bottom: 80px; left: -60px; }
+
+    .brand-icon {
+      width: 52px;
+      height: 52px;
+      margin-bottom: var(--sp-xxl);
+    }
+
+    /* tagline: 21px / 600 / ls 0.231px */
+    .brand-tagline {
+      font-family: 'SF Pro Display', 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 21px;
+      font-weight: 600;
+      line-height: 1.19;
+      letter-spacing: 0.231px;
+      color: var(--on-dark);
+      margin-bottom: var(--sp-md);
+    }
+
+    /* body: 17px / 400 / lh 1.47 / ls -0.374px */
+    .brand-desc {
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.47;
+      letter-spacing: -0.374px;
+      color: var(--body-muted); /* body-muted: dark tile 보조 텍스트 */
+    }
+
+    /* 페이지 인디케이터 도트 */
+    .brand-dots {
+      display: flex;
+      gap: var(--sp-xs);
+      margin-top: var(--sp-xxl);
+    }
+    .brand-dots span {
+      height: 5px;
+      border-radius: var(--r-pill);
+      background: rgba(255, 255, 255, 0.25);
+    }
+    .brand-dots span:first-child {
+      width: 20px;
+      background: rgba(255, 255, 255, 0.8);
+    }
+    .brand-dots span:not(:first-child) { width: 5px; }
+
+    /* ── 우측 폼 패널 ────────────────────────────────────────── */
+    .form-panel {
+      width: 400px;
+      flex-shrink: 0;
+      background: var(--canvas);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: var(--sp-xxl);
+    }
+
+    /* display-md: 28px / 600 / lh 1.14 / ls -0.374px */
+    h1 {
+      font-family: 'SF Pro Display', 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 28px;
+      font-weight: 600;
+      line-height: 1.14;
+      letter-spacing: -0.374px;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    /* body: 17px / 400 / ls -0.374px */
+    .subtitle {
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.47;
+      letter-spacing: -0.374px;
+      color: var(--ink-muted-48);
+      margin-bottom: var(--sp-xl);
+    }
+
+    /* 폼 */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-sm);
+    }
+
+    /* 입력 — search-input 스펙: pill, h44, 1px rgba(0,0,0,0.08) border, 17px */
+    input {
+      width: 100%;
+      height: 44px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: var(--r-pill);
+      padding: 0 20px;
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 400;
+      letter-spacing: -0.374px;
+      color: var(--ink);
+      background: var(--canvas);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input::placeholder { color: var(--ink-muted-48); }
+
+    input:focus {
+      border-color: transparent;
+      outline: 2px solid var(--primary-focus);
+      outline-offset: 0;
+    }
+
+    /* 에러 — caption: 14px / 400 / ls -0.224px, color error(#ff3b30) */
+    .error-msg {
+      display: none;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.43;
+      letter-spacing: -0.224px;
+      color: var(--error);
+    }
+    .error-msg.show { display: block; }
+
+    /* button-primary: bg primary, text on-primary, pill, 17px/400
+       active: scale(0.95) — 시스템 공통 micro-interaction          */
+    .btn-login {
+      margin-top: var(--sp-xs);
+      width: 100%;
+      height: 44px;
+      background: var(--primary);
+      color: var(--on-primary);
+      border: none;
+      border-radius: var(--r-pill);
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 400;
+      letter-spacing: -0.374px;
+      cursor: pointer;
+      transition: transform 0.1s ease, opacity 0.15s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .btn-login:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .btn-login:not(:disabled):active {
+      transform: scale(0.95);
+    }
+
+    .btn-login:focus-visible {
+      outline: 2px solid var(--primary-focus);
+      outline-offset: 2px;
+    }
+
+    /* 구분선 */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: var(--hairline);
+      margin: var(--sp-lg) 0;
+    }
+
+    /* caption: 14px / 400 / ls -0.224px */
+    .signup-row {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.43;
+      letter-spacing: -0.224px;
+      color: var(--ink-muted-48);
+      text-align: center;
+    }
+
+    /* text-link: color primary */
+    .signup-row a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .signup-row a:hover { text-decoration: underline; }
+
+    /* ── 반응형 ───────────────────────────────────────────────
+       ≤ 480px: 브랜드 패널 숨기고 단일 컬럼 (SCREEN_DESIGN.md 규칙) */
+    @media (max-width: 720px) {
+      .card {
+        flex-direction: column;
+        max-width: 440px;
+        min-height: auto;
+      }
+      .brand {
+        padding: var(--sp-xl) var(--sp-xl) var(--sp-lg);
+        min-height: 200px;
+        justify-content: flex-start;
+      }
+      .brand-icon { margin-bottom: var(--sp-lg); }
+      .brand-desc { display: none; }
+      .brand-dots { margin-top: var(--sp-lg); }
+      .form-panel { width: 100%; padding: var(--sp-xl); }
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; align-items: stretch; }
+      .card {
+        border-radius: 0;
+        border: none;
+        min-height: 100dvh;
+        max-width: 100%;
+      }
+      .brand { display: none; } /* 모바일 최소 너비: 브랜드 패널 숨김 */
+      .form-panel {
+        justify-content: center;
+        padding: var(--sp-xxl) var(--sp-xl);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+
+    <!-- 좌측 브랜드 패널 (product-tile-dark 기반) -->
+    <div class="brand" aria-hidden="true">
+      <svg class="brand-icon" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="19.5" y="4"  width="13" height="44" rx="6.5" fill="#ffffff"/>
+        <rect x="4"   y="19.5" width="44" height="13" rx="6.5" fill="#ffffff"/>
+      </svg>
+
+      <p class="brand-tagline">건강 관리 플랫폼</p>
+      <p class="brand-desc">
+        환자의 실시간 건강 데이터를<br/>
+        한눈에 모니터링하세요.
+      </p>
+
+      <div class="brand-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- 우측 폼 패널 -->
+    <div class="form-panel">
+      <h1>로그인</h1>
+      <p class="subtitle">계정 정보를 입력해 주세요.</p>
+
+      <form id="loginForm" onsubmit="return handleLogin(event)">
+        <input
+          type="text"
+          id="userId"
+          placeholder="아이디"
+          autocomplete="username"
+          aria-label="아이디"
+          oninput="checkFields()"
+        />
+        <input
+          type="password"
+          id="password"
+          placeholder="암호"
+          autocomplete="current-password"
+          aria-label="암호"
+          oninput="checkFields()"
+        />
+
+        <p class="error-msg" id="errorMsg" role="alert">
+          아이디 또는 암호가 올바르지 않습니다.
+        </p>
+
+        <button type="submit" class="btn-login" id="loginBtn" disabled>
+          로그인
+        </button>
+      </form>
+
+      <div class="divider" role="separator"></div>
+
+      <p class="signup-row">
+        계정이 없으신가요?&nbsp;<a href="#">가입하기</a>
+      </p>
+    </div>
+
+  </div>
+
+  <script>
+    function checkFields() {
+      const id = document.getElementById('userId').value.trim();
+      const pw = document.getElementById('password').value;
+      document.getElementById('loginBtn').disabled = !(id && pw);
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const err = document.getElementById('errorMsg');
+      err.classList.toggle('show');
+      return false;
+    }
+  </script>
+
+</body>
+</html>

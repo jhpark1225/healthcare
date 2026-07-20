@@ -1,0 +1,47 @@
+# 로컬 개발 전용 docker-compose
+# 사용법: .env 파일이 있는 상태에서 docker compose up --build
+#
+# 네임스페이스: BACKEND_PORT (학생마다 고유)
+#   - 이미지명:     healthcare-backend-{BACKEND_PORT}
+#   - 컨테이너명:   healthcare-backend-{BACKEND_PORT}
+#   - 호스트포트:   {BACKEND_PORT}
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: healthcare-backend-${BACKEND_PORT:-3000}
+    container_name: healthcare-backend-${BACKEND_PORT:-3000}
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-3000}:${BACKEND_PORT:-3000}"
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      PORT:                    ${BACKEND_PORT:-3000}
+      NODE_ENV:                ${NODE_ENV:-development}
+      # DB
+      DB_HOST:                 ${DB_HOST}
+      DB_PORT:                 ${DB_PORT:-5432}
+      DB_NAME:                 ${DB_NAME}
+      DB_USER:                 ${DB_USER}
+      DB_PASSWORD:             ${DB_PASSWORD}
+      # JWT
+      JWT_SECRET:              ${JWT_SECRET}
+      JWT_EXPIRES_IN:          ${JWT_EXPIRES_IN:-1d}
+      JWT_REFRESH_SECRET:      ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRES_IN:  ${JWT_REFRESH_EXPIRES_IN:-7d}
+      # 시뮬레이터
+      SIMULATOR_URL:           ${SIMULATOR_URL}
+      # AI Agent
+      AI_API_URL:              ${AI_API_URL:-http://localhost:8000}
+      AI_API_TIMEOUT_MS:       ${AI_API_TIMEOUT_MS:-30000}
+      # Slack
+      SLACK_WEBHOOK_URL:       ${SLACK_WEBHOOK_URL}
+      # 로그
+      LOG_DIR:                 /app/logs
+      LOG_LEVEL:               ${LOG_LEVEL:-debug}
+      LOG_RETENTION_DAYS:      ${LOG_RETENTION_DAYS:-7d}
+      # 데이터 보존
+      DATA_RETENTION_DAYS:     ${DATA_RETENTION_DAYS:-7}
