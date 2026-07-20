@@ -66,38 +66,43 @@ export class DatabaseSeederService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
-    await this.seedMembers();
-    await this.seedDiseaseCodes();
-    await this.seedMemberDiseases();
+    try {
+      await this.seedMembers();
+      await this.seedDiseaseCodes();
+      await this.seedMemberDiseases();
+    } catch (err) {
+      this.logger.error(`시드 실패: ${(err as Error).message}`);
+    }
   }
 
   private async seedMembers() {
-    const count = await this.memberRepo.count();
-    if (count > 0) return;
-
-    this.logger.log('members 테이블 시드 시작...');
+    this.logger.log('[Seed] members 시드 시작 (upsert)...');
     for (const u of MEMBERS) {
-      const hashed = await bcrypt.hash(u.password, 10);
+      const hashed = await bcrypt.hash(u.password, 6);
       await this.memberRepo.save({ ...u, password: hashed });
     }
-    this.logger.log(`${MEMBERS.length}명 삽입 완료`);
+    this.logger.log(`[Seed] members ${MEMBERS.length}명 완료`);
   }
 
   private async seedDiseaseCodes() {
     const count = await this.diseaseCodeRepo.count();
-    if (count > 0) return;
-
-    this.logger.log('disease_codes 테이블 시드 시작...');
+    if (count > 0) {
+      this.logger.log(`[Seed] disease_codes 이미 있음 (${count}개) — 스킵`);
+      return;
+    }
+    this.logger.log('[Seed] disease_codes 시드 시작...');
     await this.diseaseCodeRepo.save(DISEASE_CODES);
-    this.logger.log(`${DISEASE_CODES.length}개 질병코드 삽입 완료`);
+    this.logger.log(`[Seed] disease_codes ${DISEASE_CODES.length}개 완료`);
   }
 
   private async seedMemberDiseases() {
     const count = await this.memberDiseaseRepo.count();
-    if (count > 0) return;
-
-    this.logger.log('member_diseases 테이블 시드 시작...');
+    if (count > 0) {
+      this.logger.log(`[Seed] member_diseases 이미 있음 (${count}개) — 스킵`);
+      return;
+    }
+    this.logger.log('[Seed] member_diseases 시드 시작...');
     await this.memberDiseaseRepo.save(MEMBER_DISEASES);
-    this.logger.log(`${MEMBER_DISEASES.length}개 진단 기록 삽입 완료`);
+    this.logger.log(`[Seed] member_diseases ${MEMBER_DISEASES.length}개 완료`);
   }
 }
