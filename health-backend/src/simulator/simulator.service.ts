@@ -148,10 +148,10 @@ export class SimulatorService implements OnModuleInit {
 
   private async handleHeartRate(member: Member, data: any) {
     try {
-      const measuredAt = data.timestamp ? new Date(data.timestamp) : new Date();
-      const heartRate = data.heartRate;
-      const source = data.source;
-      const note = data.note;
+      const measuredAt = new Date(data.timestamp ?? data.measured_at ?? Date.now());
+      const heartRate = data.heartRate ?? data.heart_rate;
+      const source = data.source ?? data.status ?? null;
+      const note = data.note ?? null;
 
       // DB 저장
       const entity = this.heartRateRepository.create({
@@ -193,10 +193,10 @@ export class SimulatorService implements OnModuleInit {
 
   private async handleBloodPressure(member: Member, data: any) {
     try {
-      const measuredAt = data.timestamp ? new Date(data.timestamp) : new Date();
+      const measuredAt = new Date(data.timestamp ?? data.measured_at ?? Date.now());
       const systolic = data.systolic;
       const diastolic = data.diastolic;
-      const source = data.source;
+      const source = data.source ?? data.status ?? null;
 
       // DB 저장
       const entity = this.bloodPressureRepository.create({
@@ -241,11 +241,11 @@ export class SimulatorService implements OnModuleInit {
 
   private async handleWeight(member: Member, data: any) {
     try {
-      const measuredAt = data.timestamp ? new Date(data.timestamp) : new Date();
-      const weightKg = data.weightKg;
+      const measuredAt = new Date(data.timestamp ?? data.measured_at ?? Date.now());
+      const weightKg = data.weightKg ?? data.weight_kg;
       const bmi = data.bmi;
-      const skeletalMuscleMassKg = data.skeletalMuscleMassKg;
-      const bodyFatPercentage = data.bodyFatPercentage;
+      const skeletalMuscleMassKg = data.skeletalMuscleMassKg ?? data.skeletal_muscle_mass;
+      const bodyFatPercentage = data.bodyFatPercentage ?? data.body_fat_percentage;
 
       // DB 저장
       const entity = this.weightRepository.create({
@@ -276,9 +276,9 @@ export class SimulatorService implements OnModuleInit {
 
   private async handleGlucose(member: Member, data: any) {
     try {
-      const measuredAt = data.timestamp ? new Date(data.timestamp) : new Date();
-      const glucoseValue = data.glucoseMgDl;
-      const status = data.status;
+      const measuredAt = new Date(data.timestamp ?? data.measured_at ?? Date.now());
+      const glucoseValue = data.glucoseMgDl ?? data.glucose_value ?? data.glucoseValue;
+      const status = data.status ?? null;
 
       // DB 저장
       const entity = this.glucoseRepository.create({
@@ -319,8 +319,8 @@ export class SimulatorService implements OnModuleInit {
 
   private async handleStepCount(member: Member, data: any) {
     try {
-      const measuredAt = data.timestamp ? new Date(data.timestamp) : new Date();
-      const cumulativeSteps = data.stepCount;
+      const measuredAt = new Date(data.timestamp ?? data.measured_at ?? Date.now());
+      const cumulativeSteps = data.stepCount ?? data.cumulative_steps ?? data.step_count;
 
       // DB 저장
       const entity = this.stepRepository.create({
@@ -351,12 +351,9 @@ export class SimulatorService implements OnModuleInit {
   }
 
   private logIfToday(memberId: string, type: string, data: any) {
-    const measuredAt = data.timestamp ? new Date(data.timestamp) : new Date();
-    if (this.isToday(measuredAt)) {
-      this.logger.info(
-        `[수신] ${memberId} | ${type} | ${JSON.stringify(data)}`,
-        { context: 'SimulatorService' },
-      );
-    }
+    this.logger.info(
+      `[수신] ${memberId} | ${type} | ${JSON.stringify(data)}`,
+      { context: 'SimulatorService' },
+    );
   }
 }
