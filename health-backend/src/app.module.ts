@@ -35,6 +35,8 @@ import { WebhookModule } from './webhook/webhook.module';
         synchronize: false,
         autoLoadEntities: true,
         logging: cs.get<string>('NODE_ENV') === 'development',
+        retryAttempts: 3,
+        retryDelay: 2000,
       }),
       inject: [ConfigService],
     }),

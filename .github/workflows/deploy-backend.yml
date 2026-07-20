@@ -129,8 +129,8 @@ jobs:
           echo '>>> [4/4] 오래된 이미지 정리'
           docker image prune -f
 
-          echo '=== 컨테이너 상태 확인 (5초 대기) ==='
-          sleep 5
+          echo '=== 컨테이너 상태 확인 (30초 대기) ==='
+          sleep 30
           docker ps --filter "name=${CONTAINER_NAME}" \
             --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
