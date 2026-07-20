@@ -76,12 +76,23 @@ export class DatabaseSeederService implements OnApplicationBootstrap {
   }
 
   private async seedMembers() {
-    this.logger.log('[Seed] members 시드 시작 (upsert)...');
+    this.logger.log('[Seed] members 시드 시작...');
     for (const u of MEMBERS) {
-      const hashed = await bcrypt.hash(u.password, 6);
-      await this.memberRepo.save({ ...u, password: hashed });
+      try {
+        const hashed = await bcrypt.hash(u.password, 6);
+        const exists = await this.memberRepo.findOne({ where: { member_id: u.member_id } });
+        if (exists) {
+          await this.memberRepo.update({ member_id: u.member_id }, { password: hashed, api_key: u.api_key, name: u.name, gender: u.gender, birth_date: u.birth_date, member_type: u.member_type });
+          this.logger.log(`[Seed] ${u.member_id} 업데이트 완료`);
+        } else {
+          await this.memberRepo.save({ ...u, password: hashed });
+          this.logger.log(`[Seed] ${u.member_id} 신규 삽입 완료`);
+        }
+      } catch (err) {
+        this.logger.error(`[Seed] ${u.member_id} 실패: ${(err as Error).message}`);
+      }
     }
-    this.logger.log(`[Seed] members ${MEMBERS.length}명 완료`);
+    this.logger.log(`[Seed] members ${MEMBERS.length}명 처리 완료`);
   }
 
   private async seedDiseaseCodes() {
