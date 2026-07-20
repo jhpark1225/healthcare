@@ -24,10 +24,10 @@ export class AuthController {
   @ApiBody({
     schema: {
       type: 'object',
-      required: ['id', 'passwd'],
+      required: ['member_id', 'password'],
       properties: {
-        id: { type: 'string', example: 'user_001' },
-        passwd: { type: 'string', example: 'user_001123!' },
+        member_id: { type: 'string', example: 'user_001' },
+        password: { type: 'string', example: 'user_001123!' },
       },
     },
   })
@@ -50,8 +50,8 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: '아이디 또는 비밀번호 불일치' })
-  async login(@Body() body: { id: string; passwd: string }) {
-    return this.authService.login(body.id, body.passwd);
+  async login(@Body() body: { member_id: string; password: string }) {
+    return this.authService.login(body.member_id, body.password);
   }
 
   @Post('refresh')
