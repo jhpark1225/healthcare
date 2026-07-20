@@ -1,0 +1,12 @@
+services:
+  web:
+    image: healthcare-web-${FRONTEND_PORT:-5173}
+    container_name: healthcare-web-${FRONTEND_PORT:-5173}
+    build:
+      context: ..                     # 리포 루트 (shared/ 포함)
+      dockerfile: health-web/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    restart: unless-stopped
