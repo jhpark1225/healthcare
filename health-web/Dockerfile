@@ -17,7 +17,7 @@ COPY health-web/ ./health-web/
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
-RUN cd health-web && npm run build
+RUN cd health-web && npx vite build
 
 # ─── Stage 2: 서빙 ───────────────────────────────────────────────
 FROM nginx:1.27-alpine
