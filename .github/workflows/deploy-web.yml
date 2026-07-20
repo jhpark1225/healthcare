@@ -15,7 +15,7 @@ jobs:
     env:
       IMAGE_NAME:     healthcare-web-${{ vars.FRONTEND_PORT }}
       CONTAINER_NAME: healthcare-web-${{ vars.FRONTEND_PORT }}
-      SSH_TARGET:     ${{ vars.SERVER_USER }}@${{ vars.SERVER_HOST }}
+      SSH_TARGET:     ${{ secrets.SERVER_USER }}@${{ vars.SERVER_HOST }}
 
     steps:
       # 1. 소스 체크아웃 (shared/ 포함)
