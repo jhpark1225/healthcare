@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDashboard } from '../../api/members'
 import { useAuth } from '../../hooks/useAuth'
+import { useAlerts } from '../../context/AlertContext'
 import type { DashboardResponse } from '@shared/types'
 import Sidebar from '../../components/Sidebar'
 import styles from './DashboardPage.module.css'
@@ -9,8 +10,19 @@ import styles from './DashboardPage.module.css'
 export default function DashboardPage() {
   const { member } = useAuth()
   const navigate = useNavigate()
+  const { addAlert } = useAlerts()
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const sendTestAlert = () => {
+    addAlert({
+      memberId: 'test-001',
+      type: 'heartRate',
+      value: 112,
+      message: '심박수 이상: 112 bpm (테스트)',
+      measured_at: new Date().toISOString(),
+    }, '테스트 환자')
+  }
 
   // Non-doctors see their own page
   useEffect(() => {
@@ -32,7 +44,12 @@ export default function DashboardPage() {
 
       <div className={styles.content}>
         <header className={styles.header}>
-          <h1 className={styles.pageTitle}>대시보드</h1>
+          <div className={styles.headerRow}>
+            <h1 className={styles.pageTitle}>대시보드</h1>
+            <button className={styles.testAlertBtn} onClick={sendTestAlert}>
+              🔔 테스트 알람
+            </button>
+          </div>
         </header>
 
         {loading ? (

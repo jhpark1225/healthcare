@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ResponsiveContainer, LineChart, Line,
@@ -7,7 +7,6 @@ import {
 } from 'recharts'
 import { useHealthSocket } from '../../hooks/useHealthSocket'
 import { getMember, getHealthRange } from '../../api/members'
-import { useAlerts } from '../../context/AlertContext'
 import type { Member, HealthRangeResponse } from '@shared/types'
 import { formatDate, genderLabel, calcAge, formatTime } from '@shared/utils'
 import Sidebar from '../../components/Sidebar'
@@ -68,23 +67,12 @@ export default function MemberDetailPage() {
   const { memberId } = useParams<{ memberId: string }>()
   const navigate = useNavigate()
   const { data, connected } = useHealthSocket(memberId ?? '')
-  const { addAlert } = useAlerts()
   const [memberInfo, setMemberInfo] = useState<Member | null>(null)
 
   // Range tab state
   const [rangeTab, setRangeTab] = useState<RangeTab>('오늘')
   const [rangeData, setRangeData] = useState<HealthRangeResponse | null>(null)
   const [rangeLoading, setRangeLoading] = useState(true)
-
-  // Forward WS alerts to global AlertContext
-  const alertCountRef = useRef(0)
-  useEffect(() => {
-    if (data.alerts.length > alertCountRef.current) {
-      const newAlerts = data.alerts.slice(0, data.alerts.length - alertCountRef.current)
-      newAlerts.forEach(a => addAlert(a, memberInfo?.name))
-      alertCountRef.current = data.alerts.length
-    }
-  }, [data.alerts.length, addAlert, memberInfo?.name])
 
   // Fetch member info
   useEffect(() => {

@@ -18,6 +18,25 @@
   padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-lg);
 }
 
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.testAlertBtn {
+  font-family: var(--font-text);
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: var(--rounded-md);
+  border: 1px solid rgba(255, 59, 48, 0.4);
+  background-color: rgba(255, 59, 48, 0.06);
+  color: #ff3b30;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.testAlertBtn:hover { background-color: rgba(255, 59, 48, 0.12); }
+
 .pageTitle {
   font-family: var(--font-display);
   font-size: 34px;
