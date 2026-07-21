@@ -168,9 +168,11 @@ export default function MemberDetailPage() {
             </p>
             {memberInfo?.diseases && memberInfo.diseases.length > 0 && (
               <div className={styles.tags}>
-                {memberInfo.diseases.map(d => (
-                  <span key={d.diagnosis_seq} className={styles.tag}>{d.disease_name_kr}</span>
-                ))}
+                {memberInfo.diseases
+                  .filter((d, i, arr) => arr.findIndex(x => x.disease_id === d.disease_id) === i)
+                  .map(d => (
+                    <span key={d.disease_id} className={styles.tag}>{d.disease_name_kr}</span>
+                  ))}
               </div>
             )}
           </div>
