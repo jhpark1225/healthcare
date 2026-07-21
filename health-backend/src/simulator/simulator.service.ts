@@ -63,7 +63,7 @@ export class SimulatorService implements OnModuleInit {
       context: 'SimulatorService',
     });
 
-    const socket = io(`${simUrl}/simulator`, {
+    const socket = io(simUrl, {
       transports: ['websocket'],
       query: {
         userId: member.member_id,

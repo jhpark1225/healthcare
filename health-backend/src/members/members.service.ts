@@ -5,7 +5,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, Between } from 'typeorm';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 
@@ -162,6 +162,75 @@ export class MembersService {
       weights,
       glucoses,
       steps,
+    };
+  }
+
+  async getDashboard(user: any) {
+    if (user.member_type !== 'DOCT') {
+      throw new ForbiddenException('의사 권한이 필요합니다.');
+    }
+
+    const patients = await this.memberRepository.find({
+      where: { member_type: 'PATI' },
+    });
+
+    const patientData = await Promise.all(
+      patients.map(async (p) => {
+        const [latestHr, latestBp, latestGlucose] = await Promise.all([
+          this.heartRateRepository.findOne({
+            where: { member_id: p.member_id },
+            order: { measured_at: 'DESC' },
+          }),
+          this.bloodPressureRepository.findOne({
+            where: { member_id: p.member_id },
+            order: { measured_at: 'DESC' },
+          }),
+          this.glucoseRepository.findOne({
+            where: { member_id: p.member_id },
+            order: { measured_at: 'DESC' },
+          }),
+        ]);
+
+        const hasAlert =
+          (latestHr?.heart_rate ?? 0) >= 100 ||
+          (latestBp?.systolic ?? 0) >= 140 ||
+          latestGlucose?.status === 'elevated' ||
+          latestGlucose?.status === 'high';
+
+        return {
+          member_id: p.member_id,
+          name: p.name,
+          latestHeartRate: latestHr ?? null,
+          latestBP: latestBp ?? null,
+          latestGlucose: latestGlucose ?? null,
+          hasAlert,
+        };
+      }),
+    );
+
+    // Count today's records (KST: UTC+9)
+    const nowUtc = new Date();
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const kstNow = new Date(nowUtc.getTime() + kstOffset);
+    const todayStartKst = new Date(
+      Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate()),
+    );
+    const todayStart = new Date(todayStartKst.getTime() - kstOffset);
+    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
+
+    const [hrCount, bpCount, gluCount, stepCount, weightCount] = await Promise.all([
+      this.heartRateRepository.count({ where: { measured_at: Between(todayStart, todayEnd) } }),
+      this.bloodPressureRepository.count({ where: { measured_at: Between(todayStart, todayEnd) } }),
+      this.glucoseRepository.count({ where: { measured_at: Between(todayStart, todayEnd) } }),
+      this.stepRepository.count({ where: { measured_at: Between(todayStart, todayEnd) } }),
+      this.weightRepository.count({ where: { measured_at: Between(todayStart, todayEnd) } }),
+    ]);
+
+    return {
+      total: patients.length,
+      abnormal: patientData.filter((p) => p.hasAlert).length,
+      todayCount: hrCount + bpCount + gluCount + stepCount + weightCount,
+      patients: patientData,
     };
   }
 

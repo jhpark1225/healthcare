@@ -6,8 +6,9 @@ import {
   CartesianGrid, Tooltip, Legend, ReferenceLine,
 } from 'recharts'
 import { useHealthSocket } from '../../hooks/useHealthSocket'
-import { getMember } from '../../api/members'
-import type { Member, WsAlertEvent } from '@shared/types'
+import { getMember, getHealthRange } from '../../api/members'
+import { useAlerts } from '../../context/AlertContext'
+import type { Member, HealthRangeResponse } from '@shared/types'
 import { formatDate, genderLabel, calcAge, formatTime } from '@shared/utils'
 import Sidebar from '../../components/Sidebar'
 import styles from './MemberDetailPage.module.css'
@@ -34,59 +35,101 @@ const TOOLTIP_STYLE = {
 
 const AXIS_TICK = { fontSize: 11, fill: C.text }
 
+type RangeTab = '오늘' | '7일' | '30일'
+
+function computeRange(tab: RangeTab): { from: string; to: string } {
+  const kstOffset = 9 * 60 * 60 * 1000
+  const kstNow = new Date(Date.now() + kstOffset)
+  // KST midnight in UTC
+  const todayStartUtc = new Date(
+    Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate()) - kstOffset
+  )
+  const days = tab === '오늘' ? 0 : tab === '7일' ? 6 : 29
+  const fromUtc = new Date(todayStartUtc.getTime() - days * 86400000)
+  const toUtc   = new Date(todayStartUtc.getTime() + 86400000 - 1)
+
+  const toKST = (d: Date): string => {
+    const kd = new Date(d.getTime() + kstOffset)
+    const Y = kd.getUTCFullYear()
+    const M = String(kd.getUTCMonth() + 1).padStart(2, '0')
+    const D = String(kd.getUTCDate()).padStart(2, '0')
+    const h = String(kd.getUTCHours()).padStart(2, '0')
+    const m = String(kd.getUTCMinutes()).padStart(2, '0')
+    const s = String(kd.getUTCSeconds()).padStart(2, '0')
+    return `${Y}-${M}-${D}T${h}:${m}:${s}+09:00`
+  }
+
+  return { from: toKST(fromUtc), to: toKST(toUtc) }
+}
+
 // ── Main component ───────────────────────────────────────────────────────────
 
 export default function MemberDetailPage() {
   const { memberId } = useParams<{ memberId: string }>()
   const navigate = useNavigate()
-  const { data, loading, connected } = useHealthSocket(memberId ?? '')
+  const { data, connected } = useHealthSocket(memberId ?? '')
+  const { addAlert } = useAlerts()
   const [memberInfo, setMemberInfo] = useState<Member | null>(null)
-  const [activeAlert, setActiveAlert] = useState<WsAlertEvent | null>(null)
-  const alertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Fetch member detail (includes diseases)
+  // Range tab state
+  const [rangeTab, setRangeTab] = useState<RangeTab>('오늘')
+  const [rangeData, setRangeData] = useState<HealthRangeResponse | null>(null)
+  const [rangeLoading, setRangeLoading] = useState(true)
+
+  // Forward WS alerts to global AlertContext
+  const alertCountRef = useRef(0)
+  useEffect(() => {
+    if (data.alerts.length > alertCountRef.current) {
+      const newAlerts = data.alerts.slice(0, data.alerts.length - alertCountRef.current)
+      newAlerts.forEach(a => addAlert(a, memberInfo?.name))
+      alertCountRef.current = data.alerts.length
+    }
+  }, [data.alerts.length, addAlert, memberInfo?.name])
+
+  // Fetch member info
   useEffect(() => {
     if (!memberId) return
     getMember(memberId).then(setMemberInfo).catch(() => {})
   }, [memberId])
 
-  // Auto-dismiss alert after 5s when new alert arrives
-  const alertCount = data.alerts.length
+  // Fetch range data on tab change or memberId change
   useEffect(() => {
-    if (alertCount === 0) return
-    setActiveAlert(data.alerts[0])
-    if (alertTimerRef.current) clearTimeout(alertTimerRef.current)
-    alertTimerRef.current = setTimeout(() => setActiveAlert(null), 5000)
-    return () => {
-      if (alertTimerRef.current) clearTimeout(alertTimerRef.current)
-    }
-  }, [alertCount, data.alerts])
+    if (!memberId) return
+    setRangeLoading(true)
+    const { from, to } = computeRange(rangeTab)
+    getHealthRange(memberId, from, to)
+      .then(res => setRangeData(res))
+      .catch(() => setRangeData(null))
+      .finally(() => setRangeLoading(false))
+  }, [memberId, rangeTab])
 
   if (!memberId) {
     void navigate('/members')
     return null
   }
 
-  // Prepare chart data (reverse: oldest → newest for left→right display)
-  const hrData = [...data.heartRates].reverse().map(r => ({
+  // Range API returns ASC order (oldest first) — use directly for charts
+  const hr   = rangeData?.heartRates ?? []
+  const bp   = rangeData?.bloodPressures ?? []
+  const glu  = rangeData?.glucoses ?? []
+  const wt   = rangeData?.weights ?? []
+  const stp  = rangeData?.steps ?? []
+
+  const hrData = hr.map(r => ({
     time: formatTime(r.measured_at),
     bpm: r.heart_rate,
-    abnormal: r.heart_rate >= 100 ? r.heart_rate : null,
   }))
-
-  const bpData = [...data.bloodPressures].reverse().map(r => ({
+  const bpData = bp.map(r => ({
     time: formatTime(r.measured_at),
     systolic: r.systolic,
     diastolic: r.diastolic,
   }))
-
-  const glucoseData = [...data.glucoses].reverse().map(r => ({
+  const glucoseData = glu.map(r => ({
     time: formatTime(r.measured_at),
     glucose: r.glucose_value,
     status: r.status,
   }))
-
-  const weightData = [...data.weights].reverse().map(r => ({
+  const weightData = wt.map(r => ({
     time: formatTime(r.measured_at),
     weight: r.weight_kg,
     bmi: r.bmi,
@@ -94,30 +137,24 @@ export default function MemberDetailPage() {
     fat: r.body_fat_percentage ?? 0,
   }))
 
-  const latestHr = data.heartRates[0]
-  const latestBp = data.bloodPressures[0]
-  const latestGlu = data.glucoses[0]
-  const latestWt = data.weights[0]
-  const latestStep = data.steps[0]
+  // Latest values: last element (ASC → last = most recent)
+  const latestHr   = hr.at(-1)
+  const latestBp   = bp.at(-1)
+  const latestGlu  = glu.at(-1)
+  const latestWt   = wt.at(-1)
+  const latestStep = stp.at(-1)
 
-  const hrAbnormal = !!latestHr && latestHr.heart_rate >= 100
-  const bpAbnormal = !!latestBp && (latestBp.systolic >= 140 || latestBp.diastolic >= 90)
-  const gluStatus = latestGlu?.status ?? null
+  const hrAbnormal  = !!latestHr && latestHr.heart_rate >= 100
+  const bpAbnormal  = !!latestBp && (latestBp.systolic >= 140 || latestBp.diastolic >= 90)
+  const gluStatus   = latestGlu?.status ?? null
+
+  const TABS: RangeTab[] = ['오늘', '7일', '30일']
 
   return (
     <div className={styles.layout}>
       <Sidebar currentPatientName={memberInfo?.name ?? memberId} />
 
       <div className={styles.content}>
-
-        {/* Alert banner */}
-        {activeAlert && (
-          <div className={styles.alertBanner}>
-            <span className={styles.alertIcon}>⚠</span>
-            <span className={styles.alertMsg}>{activeAlert.message}</span>
-            <button className={styles.alertClose} onClick={() => setActiveAlert(null)}>✕</button>
-          </div>
-        )}
 
         {/* Profile banner */}
         <div className={styles.profile}>
@@ -151,15 +188,34 @@ export default function MemberDetailPage() {
           </div>
         </div>
 
-        {loading ? (
-          <p className={styles.hint}>건강 데이터 불러오는 중...</p>
+        {/* Range tab group */}
+        <div className={styles.tabBar}>
+          {TABS.map(tab => (
+            <button
+              key={tab}
+              className={`${styles.tabBtn} ${rangeTab === tab ? styles.tabBtnActive : ''}`}
+              onClick={() => setRangeTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {rangeLoading ? (
+          <div className={styles.skeletonGrid}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className={styles.skeletonCard}>
+                <div className={styles.skeletonLine} style={{ width: '40%', height: 18, marginBottom: 12 }} />
+                <div className={styles.skeletonLine} style={{ width: '100%', height: 150 }} />
+              </div>
+            ))}
+          </div>
         ) : (
           <div className={styles.chartGrid}>
 
             {/* Heart Rate */}
             <ChartCard
-              title="심박수"
-              unit="bpm"
+              title="심박수" unit="bpm"
               latest={latestHr ? `${latestHr.heart_rate} bpm` : '-'}
               latestTime={latestHr?.measured_at}
               badge={hrAbnormal ? { text: '이상', type: 'danger' } : undefined}
@@ -180,8 +236,7 @@ export default function MemberDetailPage() {
 
             {/* Blood Pressure */}
             <ChartCard
-              title="혈압"
-              unit="mmHg"
+              title="혈압" unit="mmHg"
               latest={latestBp ? `${latestBp.systolic}/${latestBp.diastolic}` : '-'}
               latestTime={latestBp?.measured_at}
               badge={bpAbnormal ? { text: '이상', type: 'danger' } : undefined}
@@ -205,8 +260,7 @@ export default function MemberDetailPage() {
 
             {/* Glucose */}
             <ChartCard
-              title="혈당"
-              unit="mg/dL"
+              title="혈당" unit="mg/dL"
               latest={latestGlu ? `${latestGlu.glucose_value} mg/dL` : '-'}
               latestTime={latestGlu?.measured_at}
               badge={
@@ -231,17 +285,13 @@ export default function MemberDetailPage() {
 
             {/* Steps */}
             <ChartCard
-              title="걸음수"
-              unit="걸음"
+              title="걸음수" unit="걸음"
               latest={latestStep ? `${latestStep.cumulative_steps.toLocaleString()} 걸음` : '-'}
               latestTime={latestStep?.measured_at}
             >
               <ResponsiveContainer width="100%" height={150}>
                 <BarChart
-                  data={[...data.steps].reverse().map(r => ({
-                    time: formatTime(r.measured_at),
-                    steps: r.cumulative_steps,
-                  }))}
+                  data={stp.map(r => ({ time: formatTime(r.measured_at), steps: r.cumulative_steps }))}
                   margin={{ top: 4, right: 8, bottom: 0, left: -20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke={C.grid} />
@@ -255,8 +305,7 @@ export default function MemberDetailPage() {
 
             {/* Weight */}
             <ChartCard
-              title="체중"
-              unit="kg"
+              title="체중" unit="kg"
               latest={latestWt ? `${latestWt.weight_kg} kg` : '-'}
               latestTime={latestWt?.measured_at}
             >
@@ -273,8 +322,7 @@ export default function MemberDetailPage() {
 
             {/* BMI */}
             <ChartCard
-              title="BMI"
-              unit=""
+              title="BMI" unit=""
               latest={latestWt ? `${latestWt.bmi}` : '-'}
               latestTime={latestWt?.measured_at}
             >
@@ -292,8 +340,7 @@ export default function MemberDetailPage() {
 
             {/* Skeletal muscle mass */}
             <ChartCard
-              title="골격근량"
-              unit="kg"
+              title="골격근량" unit="kg"
               latest={latestWt?.skeletal_muscle_mass != null ? `${latestWt.skeletal_muscle_mass} kg` : '-'}
               latestTime={latestWt?.measured_at}
             >
@@ -308,10 +355,9 @@ export default function MemberDetailPage() {
               </ResponsiveContainer>
             </ChartCard>
 
-            {/* Body fat percentage */}
+            {/* Body fat */}
             <ChartCard
-              title="체지방률"
-              unit="%"
+              title="체지방률" unit="%"
               latest={latestWt?.body_fat_percentage != null ? `${latestWt.body_fat_percentage}%` : '-'}
               latestTime={latestWt?.measured_at}
             >

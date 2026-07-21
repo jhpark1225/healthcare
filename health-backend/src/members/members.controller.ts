@@ -42,6 +42,17 @@ export class MembersController {
     return this.membersService.findAll(req.user, { member_id, member_type, search });
   }
 
+  @Get('dashboard')
+  @ApiOperation({
+    summary: '의사 전체 환자 대시보드',
+    description: '의사(DOCT) 전용. 전체 환자별 최신 수치 + 이상 여부 + 오늘 수신 건수',
+  })
+  @ApiResponse({ status: 200, description: '대시보드 요약' })
+  @ApiResponse({ status: 403, description: '의사 권한 없음' })
+  getDashboard(@Request() req: any) {
+    return this.membersService.getDashboard(req.user);
+  }
+
   @Get(':memberId/health/latest')
   @ApiOperation({
     summary: '최근 건강 데이터 조회 (실시간 화면 초기 로딩)',

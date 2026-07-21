@@ -7,6 +7,8 @@ import type {
   Step,
   HealthQueryParams,
   HealthLatestResponse,
+  HealthRangeResponse,
+  DashboardResponse,
 } from '@shared/types'
 import api from './axiosInstance'
 
@@ -53,5 +55,21 @@ export async function getGlucose(memberId: string, params?: HealthQueryParams): 
 
 export async function getSteps(memberId: string, params?: HealthQueryParams): Promise<Step[]> {
   const { data } = await api.get<Step[]>(`/members/${memberId}/health/steps`, { params })
+  return data
+}
+
+export async function getHealthRange(
+  memberId: string,
+  from: string,
+  to: string,
+): Promise<HealthRangeResponse> {
+  const { data } = await api.get<HealthRangeResponse>(`/members/${memberId}/health`, {
+    params: { from, to },
+  })
+  return data
+}
+
+export async function getDashboard(): Promise<DashboardResponse> {
+  const { data } = await api.get<DashboardResponse>('/members/dashboard')
   return data
 }

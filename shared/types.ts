@@ -132,6 +132,37 @@ export interface HealthQueryParams {
   limit?: number
 }
 
+// ── Health Range Response ─────────────────────────────────────────────────────
+
+export interface HealthRangeResponse {
+  member_id: string
+  from: string
+  to: string
+  heartRates: HeartRate[]
+  bloodPressures: BloodPressure[]
+  glucoses: Glucose[]
+  steps: Step[]
+  weights: Weight[]
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+
+export interface DashboardPatient {
+  member_id: string
+  name: string
+  latestHeartRate: HeartRate | null
+  latestBP: BloodPressure | null
+  latestGlucose: Glucose | null
+  hasAlert: boolean
+}
+
+export interface DashboardResponse {
+  total: number
+  abnormal: number
+  todayCount: number
+  patients: DashboardPatient[]
+}
+
 // ── WebSocket Events ──────────────────────────────────────────────────────────
 
 export interface WsHeartRateEvent {

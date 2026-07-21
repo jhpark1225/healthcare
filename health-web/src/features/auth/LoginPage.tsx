@@ -20,11 +20,11 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const res = await login({ member_id: memberId, password })
-      // DOCT → patient list, PATI → own detail
+      // DOCT → dashboard, PATI → own detail
       if (res.member.member_type === 'PATI') {
         void navigate(`/members/${res.member.member_id}`, { replace: true })
       } else {
-        void navigate('/members', { replace: true })
+        void navigate('/dashboard', { replace: true })
       }
     } catch {
       setError('아이디 또는 비밀번호가 올바르지 않습니다.')
