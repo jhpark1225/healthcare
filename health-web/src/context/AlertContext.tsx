@@ -25,8 +25,15 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
   const [alerts, setAlerts] = useState<AlertEntry[]>([])
   const [toasts, setToasts] = useState<AlertEntry[]>([])
   const counter = useRef(0)
+  const recentKeys = useRef(new Set<string>())
 
   const addAlert = useCallback((alert: WsAlertEvent, memberName?: string) => {
+    // Deduplicate: ignore same alert (memberId+type+measured_at) within 10s
+    const key = `${alert.memberId}:${alert.type}:${alert.measured_at}`
+    if (recentKeys.current.has(key)) return
+    recentKeys.current.add(key)
+    setTimeout(() => recentKeys.current.delete(key), 10000)
+
     const id = `a-${++counter.current}`
     const entry: AlertEntry = { ...alert, id, memberName, read: false }
 

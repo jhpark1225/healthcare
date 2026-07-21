@@ -13,7 +13,6 @@ import type {
   WsGlucoseEvent,
   WsStepEvent,
   WsWeightEvent,
-  WsAlertEvent,
 } from '@shared/types'
 
 export interface HealthData {
@@ -22,7 +21,6 @@ export interface HealthData {
   glucoses: Glucose[]
   steps: Step[]
   weights: Weight[]
-  alerts: WsAlertEvent[]
 }
 
 const MAX_POINTS = 20
@@ -34,7 +32,6 @@ export function useHealthSocket(memberId: string) {
     glucoses: [],
     steps: [],
     weights: [],
-    alerts: [],
   })
   const [loading, setLoading] = useState(true)
   const [connected, setConnected] = useState(false)
@@ -59,7 +56,7 @@ export function useHealthSocket(memberId: string) {
       })
       .catch(() => { if (!cancelled) setLoading(false) })
 
-    // Step 2: WebSocket subscription
+    // Step 2: WebSocket subscription (vitals only — alerts handled by AlertContext)
     const token = Cookies.get('access_token') ?? ''
     const socket = io(`${import.meta.env.VITE_WS_URL as string}/health-ws`, {
       auth: { token },
@@ -138,11 +135,6 @@ export function useHealthSocket(memberId: string) {
         ...prev,
         weights: [row, ...prev.weights].slice(0, MAX_POINTS),
       }))
-    })
-
-    socket.on('alert', (d: WsAlertEvent) => {
-      if (cancelled) return
-      setData(prev => ({ ...prev, alerts: [d, ...prev.alerts] }))
     })
 
     return () => {
